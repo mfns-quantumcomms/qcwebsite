@@ -104,7 +104,7 @@ export const plant = {
 
 /** Which depots exist is disputed across the company's own documents. Only `confirmed` depots get pages. */
 export const depotPolicy = {
-  note: 'Capability Statement Rev 10 lists Victoria, New South Wales and Queensland. The 2022 website footer added South Australia and Western Australia. Client to confirm staffed depots before launch.',
+  note: 'All six sites are published at the company\'s confirmation. Two still need detail: Penrith has no street address on record, and the Queensland, South Australian and Western Australian depots list the head office number rather than a local one. The 2019 capability statement names only Victoria, New South Wales and Queensland and should be reissued to match.',
 };
 
 /** Company milestones. Only verified entries render with a year; others render with a qualifier. */

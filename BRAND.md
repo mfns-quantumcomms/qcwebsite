@@ -101,6 +101,8 @@ hold up beside Service Stream, Indara, Nokia and Ericsson. All of it lives in `g
 | Stat band | `.statband` | A row of large figures. Values come from the register only |
 | Feature band | `.feature` (see the home page) | A full-bleed photograph with reversed text, to break a long page |
 | Scroll reveal | `.reveal` | Fades and rises on scroll. Visible by default with no JavaScript and under reduced motion |
+| Coverage map | `CoverageMap` | Inline SVG of Australia from real state boundaries, one pin per depot, no third party |
+| Depot map | `DepotMap` | A map baked at build time, which becomes a pan and zoom Leaflet map when the reader presses Explore the map |
 
 Rhythm: sections alternate white, Mist and Ink so a page never reads as one flat slab.
 The header is sticky and condenses once the page moves.

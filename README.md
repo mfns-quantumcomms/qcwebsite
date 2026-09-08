@@ -23,11 +23,25 @@ npm run check      # type and template checks
 | News and press | `src/content/news/*.md` | `verified: true` once the link and quote are checked with the publisher. |
 | Case studies | `src/content/projects/*.md` | Publish with `published: true` only after the client approves. |
 | Photos | `src/assets/photos/` + `src/data/images.ts` | Add the file, import it in `images.ts`, write alt text in `alts`. |
+| Depot maps | `src/assets/maps/` | Rebuilt by `npm run maps` from the depot register. Run it after adding or moving a depot, or the page falls back to an address block. |
 | Navigation | `src/data/nav.ts` | |
 | Redirects from the old site | `public/_redirects` | All 24 legacy URLs and the three old PDFs. |
 | Security headers and CSP | `public/_headers` | |
 
 Rule: no numeric or superlative claim is typed into a page. Import it from a register or leave it out. See `BUILD-BRIEF.md`.
+
+## Maps
+
+Two kinds, neither of which calls a third party until a reader asks it to:
+
+- **Coverage map**, inline SVG drawn from simplified state boundaries, with a pin per depot read
+  from the register. No tiles, no script.
+- **Depot maps**, baked from OpenStreetMap tiles at build time by `npm run maps` and served from
+  our own origin. Pressing **Explore the map** loads a pinned, integrity checked Leaflet build and
+  turns it into a real pan and zoom map. That is the only reason `public/_headers` allows
+  `cdnjs.cloudflare.com` and the OpenStreetMap tile host.
+
+Attribution to OpenStreetMap contributors is required by the licence and appears under every map.
 
 ## Before launch: items the client must confirm
 

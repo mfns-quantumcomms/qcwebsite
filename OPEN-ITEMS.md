@@ -5,7 +5,7 @@ Everything below is a fact the website cannot state until the company confirms i
 ## Whole site
 
 1. **Fleet register.** Confirm every unit in `src/content/fleet/` is still in service, add units bought since 2019 (press reports about 30 Bronto platforms), confirm the S104HLA delivery and commissioning date, and supply OEM, model and SWL for the Actros and MAN units. Until then the site shows figures from the 2019 fleet portfolio with a 'to confirm' note and never states a fleet count or a maximum reach as a headline.
-2. **Depots.** Confirm whether Penrith (or Newcastle), Middle Beach SA and Success WA are staffed depots. Supply street address, local phone and hours for each. Set `confirmed: true` in `src/content/depots/` to publish them.
+2. **Depots.** All six sites are now published. Two gaps remain: Penrith has no street address on record (the 2019 capability statement says Newcastle, the 2022 footer says Penrith), and the Queensland, South Australian and Western Australian depots list the head office number rather than a local one. Supply the street address, local phone and hours for each, then reissue the capability statement, which still names only three states.
 3. **ISO certificates.** Supply the three certificate PDFs, confirm certificate numbers, certifying body and expiry. The compliance page currently marks the numbers unverified.
 4. **Leadership.** Confirm Andrew Drenovski's title and supply profiles for operations, HSEQ and workshop leads if they are to be listed.
 5. **Programmes and clients.** Confirm which of the six programmes and three tier-one clients named in the 2019 capability statement may still be published.

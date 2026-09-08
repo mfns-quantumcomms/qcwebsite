@@ -6,7 +6,7 @@
  * States are shaded by role: a confirmed depot, coverage serviced from a depot, or neither.
  * Pins come from the depot register, so an unconfirmed depot never appears.
  */
-import { auStatePaths, auViewBox, projectAU } from '@data/au-map';
+import { auStatePaths, auViewBox, auWidth, projectAU } from '@data/au-map';
 import { confirmedDepots, coverageStates, stateNames } from '../lib/facts';
 
 interface Props {
@@ -36,8 +36,16 @@ const labelled = pins.map((p) => {
   let dy = -14;
   while (placed.some((q) => Math.abs(q.x - p.x) < 90 && Math.abs(q.y - (p.y + dy)) < 22)) dy += 26;
   placed.push({ x: p.x, y: p.y + dy });
-  return { ...p, dy };
+  // A pin near the east or west edge anchors its label inward, so the text stays on the map
+  // instead of painting past it and forcing the page to scroll sideways.
+  const frac = p.x / auWidth;
+  const anchor = frac < 0.16 ? 'start' : frac > 0.84 ? 'end' : 'middle';
+  const nudge = anchor === 'start' ? -18 : anchor === 'end' ? 18 : 0;
+  return { ...p, dy, anchor, nudge };
 });
+
+/** Only name a shading in the legend if some state actually carries it. */
+const hasCoverageOnly = covered.some((s) => !depotStates.includes(s));
 
 const c = variant === 'dark'
   ? { land: '#26313A', landEdge: '#3E4C57', depot: '#1E6B27', cover: '#2C3A44', pin: '#3F9C2F', pinRing: '#15191C', label: '#E7E9EB', legend: '#A9B1B7' }
@@ -57,14 +65,14 @@ const describe = `Map of Australia. Depots in ${depotStates.map((s) => stateName
       <g>
         <circle cx={p.x} cy={p.y} r="16" fill={c.pin} stroke={c.pinRing} stroke-width="5" />
         {showLabels && (
-          <text x={p.x} y={p.y + p.dy} text-anchor="middle" class="covmap__label" fill={c.label}>{p.label}</text>
+          <text x={p.x + p.nudge} y={p.y + p.dy} text-anchor={p.anchor} class="covmap__label" fill={c.label}>{p.label}</text>
         )}
       </g>
     ))}
   </svg>
   <ul class="covmap__legend" style={`color:${c.legend}`}>
     <li><span class="covmap__key" style={`background:${c.depot};border-color:${c.landEdge}`}></span>Depot</li>
-    <li><span class="covmap__key" style={`background:${c.cover};border-color:${c.landEdge}`}></span>Serviced from a depot</li>
+    {hasCoverageOnly && <li><span class="covmap__key" style={`background:${c.cover};border-color:${c.landEdge}`}></span>Serviced from a depot</li>}
     <li><span class="covmap__key covmap__key--pin" style={`background:${c.pin};border-color:${c.pinRing}`}></span>Depot location</li>
   </ul>
   {caption && <figcaption class="covmap__cap">{caption}</figcaption>}
@@ -72,7 +80,7 @@ const describe = `Map of Australia. Depots in ${depotStates.map((s) => stateName
 
 <style>
   .covmap { margin: 0; display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
-  .covmap__svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .covmap__svg { width: 100%; height: auto; display: block; overflow: hidden; }
   /* Place names take the display weight, one of the three the brand allows. */
   .covmap__label { font-family: var(--font-display); font-weight: 600; font-size: 30px; letter-spacing: 0.01em; paint-order: stroke; stroke: rgba(255, 255, 255, 0.85); stroke-width: 7px; stroke-linejoin: round; }
   .covmap--dark .covmap__label { stroke: rgba(21, 25, 28, 0.85); }

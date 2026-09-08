@@ -1,14 +1,14 @@
 ---
 /**
- * Static location map for one depot.
+ * Location map for one depot.
  *
- * The image is baked at build time by scripts/build-maps.mjs from OpenStreetMap tiles and
- * served from our own origin, so a visitor's browser makes no third-party request and the
- * content security policy needs no exception. Attribution is required by the ODbL licence
- * and is printed under every map.
+ * Loads as a static image baked at build time by scripts/build-maps.mjs, so the page paints
+ * instantly, makes no third-party request and needs no cookie banner. Pressing the button
+ * swaps that image for a real pan and zoom map: Leaflet is fetched from a pinned, integrity
+ * checked CDN build only at that moment, and only for the person who asked for it.
  *
- * Falls back to an address block with a directions link when a depot has no baked map,
- * which is the case for any depot the client has not confirmed.
+ * Without JavaScript, and in print, the static map and the directions link remain.
+ * Attribution to OpenStreetMap contributors is required by the ODbL and is shown either way.
  */
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
@@ -17,8 +17,9 @@ interface Props {
   depot: CollectionEntry<'depots'>;
   ratio?: 'wide' | 'square';
   class?: string;
+  interactive?: boolean;
 }
-const { depot, ratio = 'wide', class: cls = '' } = Astro.props;
+const { depot, ratio = 'wide', class: cls = '', interactive = true } = Astro.props;
 const d = depot.data;
 
 const maps = import.meta.glob<{ default: ImageMetadata }>('/src/assets/maps/*.jpg', { eager: true });
@@ -28,20 +29,43 @@ const addressLine = [d.street, `${d.suburb} ${d.state} ${d.postcode ?? ''}`.trim
 const directions = d.mapUrl ?? (d.geo
   ? `https://www.google.com/maps/dir/?api=1&destination=${d.geo.lat},${d.geo.lng}`
   : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine)}`);
+const canInteract = interactive && Boolean(d.geo);
+const mapId = `dmap-${depot.id}`;
 ---
 <figure class:list={['dmap', `dmap--${ratio}`, cls]}>
   {map ? (
-    <a class="dmap__link" href={directions} target="_blank" rel="noopener">
-      <Image
-        src={map}
-        alt={`Location map showing the ${d.name} at ${addressLine}`}
-        widths={[480, 800, 1000]}
-        sizes="(min-width: 860px) 50vw, 100vw"
-        loading="lazy"
-        class="dmap__img"
-      />
-      <span class="dmap__cta">Get directions<span class="visually-hidden"> to {d.name} (opens Google Maps in a new tab)</span></span>
-    </a>
+    <div
+      class="dmap__frame"
+      id={mapId}
+      data-depot-map={canInteract ? '' : undefined}
+      data-lat={d.geo?.lat}
+      data-lng={d.geo?.lng}
+      data-zoom={d.mapZoom ?? 15}
+      data-label={`${d.name}, ${addressLine}`}
+    >
+      <a class="dmap__static" href={directions} target="_blank" rel="noopener">
+        <Image
+          src={map}
+          alt={`Location map showing the ${d.name} at ${addressLine}`}
+          widths={[480, 800, 1000]}
+          sizes="(min-width: 860px) 50vw, 100vw"
+          loading="lazy"
+          class="dmap__img"
+        />
+        <span class="visually-hidden">Open directions to {d.name} in Google Maps (opens in a new tab)</span>
+      </a>
+      <div class="dmap__controls">
+        {canInteract && (
+          <button class="dmap__btn" type="button" data-map-activate aria-controls={mapId}>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+            Explore the map
+          </button>
+        )}
+        <a class="dmap__btn dmap__btn--ghost" href={directions} target="_blank" rel="noopener">
+          Directions<span class="visually-hidden"> to {d.name} (opens Google Maps in a new tab)</span>
+        </a>
+      </div>
+    </div>
   ) : (
     <div class="dmap__placeholder">
       <p class="dmap__addr">{addressLine}</p>
@@ -54,26 +78,118 @@ const directions = d.mapUrl ?? (d.geo
   </figcaption>
 </figure>
 
+<script>
+  const LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+  const LEAFLET_JS_SRI = 'sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==';
+  const LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
+  const LEAFLET_CSS_SRI = 'sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdLE3w==';
+
+  let loading: Promise<void> | null = null;
+
+  /** Fetches Leaflet once, on the first activation anywhere on the page. */
+  function loadLeaflet(): Promise<void> {
+    if (loading) return loading;
+    loading = new Promise<void>((resolve, reject) => {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = LEAFLET_CSS;
+      css.integrity = LEAFLET_CSS_SRI;
+      css.crossOrigin = 'anonymous';
+      document.head.appendChild(css);
+
+      const js = document.createElement('script');
+      js.src = LEAFLET_JS;
+      js.integrity = LEAFLET_JS_SRI;
+      js.crossOrigin = 'anonymous';
+      js.onload = () => resolve();
+      js.onerror = () => reject(new Error('Leaflet failed to load'));
+      document.head.appendChild(js);
+    });
+    return loading;
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-map-activate]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const frame = btn.closest<HTMLElement>('[data-depot-map]');
+      if (!frame || frame.dataset.live === 'true') return;
+      const lat = Number(frame.dataset.lat);
+      const lng = Number(frame.dataset.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      const label = btn.querySelector('span');
+      btn.disabled = true;
+      if (label) label.textContent = 'Loading';
+      try {
+        await loadLeaflet();
+      } catch {
+        // The static map and the directions link are still there, so say so and stop.
+        btn.disabled = false;
+        btn.textContent = 'Map unavailable, use Directions';
+        return;
+      }
+
+      const L = (window as unknown as { L: any }).L;
+      const holder = document.createElement('div');
+      holder.className = 'dmap__live';
+      holder.setAttribute('role', 'application');
+      holder.setAttribute('aria-label', `Interactive map of ${frame.dataset.label ?? 'this depot'}`);
+      frame.appendChild(holder);
+      frame.dataset.live = 'true';
+
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const map = L.map(holder, {
+        center: [lat, lng],
+        zoom: Number(frame.dataset.zoom) || 15,
+        scrollWheelZoom: false,   // the page keeps its scroll until the map is focused
+        zoomAnimation: !reduce,
+        fadeAnimation: !reduce,
+      });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+      L.marker([lat, lng]).addTo(map).bindPopup(frame.dataset.label ?? '').openPopup();
+      map.once('focus', () => map.scrollWheelZoom.enable());
+      // The container is sized by the frame, so Leaflet is told to measure again once it is in.
+      requestAnimationFrame(() => map.invalidateSize());
+
+      btn.remove();
+    });
+  });
+</script>
+
 <style>
-  /* The map is a photograph of a place, so it is presented the way the media card presents
-     one: square corners, no shadow, and a 2 px rule carrying the caption under it. */
-  .dmap { margin: 0; display: flex; flex-direction: column; min-width: 0; }
-  .dmap__link { position: relative; display: block; overflow: hidden; background: var(--concrete); text-decoration: none; }
-  .dmap__img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s cubic-bezier(.2,.6,.2,1); }
-  .dmap__link:hover .dmap__img { transform: scale(1.03); }
-  .dmap--wide .dmap__link { aspect-ratio: 16 / 10; }
-  .dmap--square .dmap__link { aspect-ratio: 1 / 1; }
-  .dmap__cta { position: absolute; left: 0; bottom: 0; display: inline-flex; align-items: center; min-height: 44px; padding: 0.55rem 1.1rem; background: var(--white); color: var(--deep-green); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-dense); }
-  .dmap__link:hover .dmap__cta { background: var(--deep-green); color: var(--white); }
-  .dmap__placeholder { border: 1px solid var(--concrete); padding: clamp(1rem, 3vw, 1.5rem); background: var(--mist); }
-  .dmap__addr { font-family: var(--font-display); font-weight: 600; color: var(--ink); margin-bottom: 0.35rem; }
+  .dmap { margin: 0; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+  .dmap__frame { position: relative; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--concrete); }
+  .dmap--wide .dmap__frame { aspect-ratio: 16 / 10; }
+  .dmap--square .dmap__frame { aspect-ratio: 1 / 1; }
+  .dmap__static { display: block; width: 100%; height: 100%; text-decoration: none; }
+  .dmap__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dmap__frame:hover { border-color: var(--ink); }
+
+  .dmap__controls { position: absolute; left: 0.75rem; bottom: 0.75rem; right: 0.75rem; z-index: 3; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .dmap__btn { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0.5rem 0.95rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); color: var(--deep-green); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-dense); text-decoration: none; cursor: pointer; box-shadow: 0 1px 2px rgba(21,25,28,.12); }
+  .dmap__btn:hover { background: var(--deep-green); color: var(--white); border-color: var(--deep-green); }
+  .dmap__btn[disabled] { opacity: .75; cursor: progress; }
+  .dmap__btn svg { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; }
+  .dmap__btn--ghost { color: var(--ink); }
+
+  /* The live map sits over the static one in the same box, so nothing shifts and the static
+     map stays visible underneath if Leaflet ever fails to paint.
+     Declared global because the element is created at runtime and carries no scope attribute. */
+  :global(.dmap__live) { position: absolute !important; inset: 0; z-index: 2; background: var(--concrete); }
+
+  .dmap__placeholder { border: 1px dashed var(--concrete); border-radius: var(--radius); padding: 1.25rem; background: var(--mist); }
+  .dmap__addr { font-weight: 600; margin-bottom: 0.35rem; }
   .dmap__placeholder p:last-child { margin: 0; }
-  .dmap__cap { margin-top: 0.85rem; padding-top: 0.85rem; border-top: 2px solid var(--ink); font-size: var(--fs-caption); color: var(--steel); }
-  /* Reversed out of Ink the rule takes the green, as the media card's does. */
-  :global(.section--dark) .dmap__cap, :global(.section--charcoal) .dmap__cap { border-top-color: var(--quantum-green); color: var(--on-ink-quiet); }
-  :global(.section--dark) .dmap__placeholder, :global(.section--charcoal) .dmap__placeholder { background: rgba(255,255,255,.05); border-color: var(--rule-on-ink); }
-  :global(.section--dark) .dmap__addr, :global(.section--charcoal) .dmap__addr { color: var(--white); }
+  .dmap__cap { font-size: var(--fs-caption); color: var(--steel); }
+
   @media (max-width: 560px) {
-    .dmap--wide .dmap__link { aspect-ratio: 4 / 3; }
+    .dmap--wide .dmap__frame { aspect-ratio: 4 / 3; }
+  }
+
+  @media print {
+    .dmap__controls, .dmap__live { display: none !important; }
+    .dmap__frame { break-inside: avoid; }
   }
 </style>
