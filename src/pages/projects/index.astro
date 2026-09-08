@@ -1,0 +1,220 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { photos, alts, type PhotoKey } from '@data/images';
+import { company, programmes } from '@data/company';
+
+const caseStudies = (await getCollection('projects'))
+  .filter((p) => p.data.published)
+  .sort((a, b) => (b.data.year ?? '').localeCompare(a.data.year ?? '') || a.data.title.localeCompare(b.data.title));
+
+/**
+ * Past work is one flat list in the register. Group it for scanning with keyword rules,
+ * applied in order; anything unmatched lands in the last group so nothing is dropped.
+ */
+const groups: Array<{ heading: string; test: RegExp | null; items: string[] }> = [
+  { heading: 'Surveys, testing and fault repair', test: /line-of-sight|survey|fault/i, items: [] },
+  { heading: 'Greenfield builds and site upgrades', test: /greenfield|upgrade|4G|NBN/i, items: [] },
+  { heading: 'Antennas, cabling and links', test: /cable|fibre|head frame|microwave|waveguide|broadcast/i, items: [] },
+  { heading: 'Structures, shelters and civils', test: /tower|mast|pole|hut|slab|decommission/i, items: [] },
+  { heading: 'Other scopes', test: null, items: [] },
+];
+for (const item of programmes.pastWork) {
+  const g = groups.find((x) => x.test?.test(item)) ?? groups[groups.length - 1];
+  g.items.push(item);
+}
+const groupsToShow = groups.filter((g) => g.items.length > 0);
+
+const listClients = (arr: readonly string[]) => arr.length > 1 ? `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}` : arr[0] ?? '';
+const photoFor = (key?: string): PhotoKey | null => key && key in photos ? (key as PhotoKey) : null;
+
+/* Every figure here is a count of entries in the programme register, not a claim about
+   sites, values or volumes. Nothing is typed in. */
+const stats = [
+  { n: `${programmes.current.length}`, text: false, l: 'Current programmes named in our capability statement' },
+  { n: `${programmes.pastClients.length}`, text: false, l: `Tier-one contractors we have delivered for: ${listClients(programmes.pastClients)}` },
+  { n: `${programmes.pastWork.length}`, text: false, l: 'Scope categories delivered, from surveys to full site decommissions' },
+  { n: 'Carrier and broadcast', text: true, l: 'Networks our crews build and maintain, metro and remote' },
+];
+
+/** Photographs of our own sites. Not tied to any named project. */
+const gallery: PhotoKey[] = ['solarArray', 'civilPierCage', 'basketOnMonopole'];
+
+const description = 'Carrier and broadcast programmes Quantum Comms works on, the scopes delivered for tier-one contractors, and client-approved case studies as they are published.';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${company.tradingName} projects`,
+  url: `${company.siteUrl}/projects/`,
+  description,
+  isPartOf: { '@type': 'WebSite', url: company.siteUrl, name: company.tradingName },
+  about: { '@id': `${company.siteUrl}/#organization` },
+};
+---
+<Base title="Projects" description={description} jsonLd={jsonLd}>
+  <Hero variant="photo" eyebrow="Projects" title="Programmes and work delivered" lead="The programmes we are engaged on, the scopes we have delivered for tier-one contractors, and case studies as clients approve them. Everything here traces back to our capability statement." image={photos.towerErection} imageAlt={alts.towerErection}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Projects' }]} />
+  </Hero>
+
+  <section class="section section--tight section--white">
+    <div class="container">
+      <ul class="statband reveal" aria-label="Programme facts">
+        {stats.map((s) => (
+          <li>
+            <span class:list={["statband__n", { "statband__n--text": s.text }]}>{s.n}</span>
+            <span class="statband__l">{s.l}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Programmes</p>
+        <h2>Current programmes</h2>
+        <p class="lead">Carrier, broadcast and power-supply programmes named in our capability statement. Most are delivered through carrier supplier panels or as a subcontractor to a tier-one builder.</p>
+      </div>
+      <ul class="programmes reveal" aria-label="Current programmes">
+        {programmes.current.map((p) => <li class="programmes__item"><span class="programmes__name">{p}</span></li>)}
+      </ul>
+      <p class="notice reveal">Source: {programmes.source} Programme names are as written in that document; some may have since closed or been renamed by the carrier.</p>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.headframe} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Past work</p>
+        <h2>Delivered as a subcontractor to the tier ones</h2>
+        <p class="lead">Work completed for tier-one contractors including {listClients(programmes.pastClients)}. Each scope below is a category of job we have delivered, not a single site.</p>
+        <p class="feature__note">Site references are provided in tender responses, subject to the client's consent.</p>
+        <a class="arrow-link" href="/capability-statement/">Capability statement</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Scopes</p>
+        <h2>Scopes we have delivered</h2>
+        <p class="lead">The past work listed in our capability statement, grouped by the kind of scope so a reader can find the one that matches their programme.</p>
+      </div>
+      <div class="grid grid--2 reveal">
+        {groupsToShow.map((g) => (
+          <div class="card">
+            <h3>{g.heading}</h3>
+            <ul class="scopes__list">
+              {g.items.map((i) => <li>{i}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <p class="caption scopes__note">Client names and scopes are from our capability statement. References for specific sites are provided in tender responses, subject to the client's consent.</p>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Case studies</p>
+        <h2>Published case studies</h2>
+      </div>
+      {caseStudies.length > 0 ? (
+        <div class="grid grid--3 reveal">
+          {caseStudies.map((p) => {
+            const key = photoFor(p.data.image);
+            return (
+              <a class="media-card" href={`/projects/${p.id}/`}>
+                {key && (
+                  <div class="media-card__media">
+                    <Image src={photos[key]} alt={p.data.imageAlt ?? alts[key]} widths={[420, 800]} sizes="(min-width: 900px) 33vw, 100vw" />
+                  </div>
+                )}
+                <div class="media-card__body">
+                  <span class="media-card__label">{[p.data.state, p.data.year].filter(Boolean).join(' · ') || 'Case study'}</span>
+                  <h3 class="media-card__title">{p.data.title}</h3>
+                  {(p.data.client || p.data.programme) && <p class="caption">{[p.data.client, p.data.programme].filter(Boolean).join(' · ')}</p>}
+                  <p>{p.data.summary}</p>
+                  <span class="arrow-link">Read the case study</span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="noticesplit"><div><p class="notice notice--info reveal">Case studies are published here as clients approve them. Carrier and tier-one contracts usually restrict what we can say publicly about a site, so we ask first. If you are assessing us for a panel or tender, ask for site references through the <a href="/compliance/">prequalification pack</a>.</p></div>
+          <div class="card">
+            <h3>Need references now?</h3>
+            <p class="text-steel">Site references, insurances and licences are issued together as the prequalification pack, with each client's consent.</p>
+            <a class="arrow-link" href="/contact/">Request the pack</a>
+          </div>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">On site</p>
+        <h2>The work, in pictures</h2>
+        <p class="lead">Photos from our own sites: greenfield power, foundations and platforms at height.</p>
+      </div>
+      <div class="gallery reveal">
+        {gallery.map((k) => (
+          <figure class="gallery__item">
+            <Image src={photos[k]} alt={alts[k]} widths={[420, 800]} sizes="(min-width: 900px) 33vw, 100vw" />
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaBand heading="Need references for a tender?" text="Site references, insurances and licences go out in the prequalification pack, with the client's consent for each reference. The capability statement carries the programme list above." primary={{ label: 'Request the prequal pack', href: '/compliance/' }} secondary={{ label: 'Capability statement', href: '/capability-statement/' }} />
+</Base>
+
+<style>
+  /* Programmes: one ruled cell each, so a long carrier programme name has room to breathe
+     and the list reads as a register rather than a row of tags. */
+  .programmes { list-style: none; margin: 0 0 clamp(1.75rem, 4vw, 2.5rem); padding: 0; max-width: none; display: grid; gap: 0 clamp(1.5rem, 3vw, 2.5rem); grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+  .programmes__item { margin: 0; min-width: 0; padding: 1rem 0; border-top: 1px solid var(--concrete); }
+  .programmes__name { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h4); line-height: 1.2; letter-spacing: -0.01em; color: var(--ink); overflow-wrap: break-word; }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 60ch; }
+  .feature__note { color: var(--on-ink-quiet); font-size: var(--fs-dense); margin-bottom: 0.25rem; }
+
+  .grid > * { min-width: 0; }
+  .scopes__list { margin: 0; padding-left: 1.1rem; }
+  .scopes__list li { margin-bottom: 0.3rem; }
+  .scopes__note { display: block; margin-top: clamp(1.25rem, 3vw, 1.75rem); max-width: var(--measure); }
+
+  /* Gallery: three frames, no card chrome. The photographs carry the section. */
+  .gallery { display: grid; gap: clamp(1rem, 2vw, 1.5rem); grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+  .gallery__item { margin: 0; min-width: 0; aspect-ratio: 4 / 3; overflow: hidden; background: var(--concrete); }
+  .gallery__item :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .noticesplit { display: grid; gap: clamp(1.25rem, 3vw, 2.5rem); align-items: start; }
+  @media (min-width: 900px) { .noticesplit { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+  .noticesplit > * { min-width: 0; }
+</style>

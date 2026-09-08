@@ -1,0 +1,423 @@
+---
+/**
+ * One page per fleet register entry. Every specification is read from the entry;
+ * the page renders whatever fields the register has and names the source. The stat band
+ * repeats the two or three figures a planner checks first, and prints nothing the entry lacks.
+ */
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import EnquiryForm from '@components/EnquiryForm.astro';
+import { photos, alts, type PhotoKey } from '@data/images';
+import { company } from '@data/company';
+import { fleetAll, fmtHeight, unitHref, depotHref, NOT_STATED } from '../../lib/facts';
+
+export async function getStaticPaths() {
+  const units = await getCollection('fleet');
+  return units.map((u) => ({ params: { slug: u.id }, props: { unit: u } }));
+}
+
+interface Props { unit: CollectionEntry<'fleet'> }
+const { unit } = Astro.props;
+const d = unit.data;
+
+type UnitClass = CollectionEntry<'fleet'>['data']['unitClass'];
+type UnitStatus = CollectionEntry<'fleet'>['data']['status'];
+const classLabel: Record<UnitClass, string> = {
+  'truck-mounted': 'Truck-mounted',
+  'trailer-mounted': 'Trailer-mounted',
+  insulated: 'Insulated',
+  plant: 'Plant',
+};
+const classHref: Record<UnitClass, string> = {
+  'truck-mounted': '/fleet/',
+  'trailer-mounted': '/fleet/trailer-mounted/',
+  insulated: '/fleet/insulated/',
+  plant: '/fleet/generators-and-plant/',
+};
+const statusInfo: Record<UnitStatus, { label: string; cls: string; meaning: string }> = {
+  'in-service': { label: 'In service', cls: 'chip--green', meaning: 'This unit is on the register and available to hire, subject to scheduling and site suitability.' },
+  'on-order': { label: 'On order', cls: 'chip--warn', meaning: 'This unit has been purchased and publicly reported, but has not yet been delivered or commissioned. It cannot be booked. Full specifications will be published from the OEM data sheet after delivery.' },
+  'to-confirm': { label: 'To confirm', cls: '', meaning: 'This unit is listed in a company document. Its place in the current fleet is being confirmed. Ask the depot before planning around it.' },
+};
+const licenceLabel: Record<string, string> = { C: 'car licence', LR: 'light rigid', MR: 'medium rigid', HR: 'heavy rigid', HC: 'heavy combination', MC: 'multi combination' };
+
+// Photo: a register entry may name a key from images.ts or a filename in src/assets/photos.
+const photoFiles = import.meta.glob<{ default: ImageMetadata }>('/src/assets/photos/*.{jpg,jpeg,png,webp}', { eager: true });
+let heroImage: ImageMetadata = photos.ewpHilltop;
+let heroAlt: string = alts.ewpHilltop;
+let ownPhoto = false;
+if (d.image) {
+  if (d.image in photos) {
+    heroImage = photos[d.image as PhotoKey];
+    heroAlt = alts[d.image as PhotoKey];
+    ownPhoto = true;
+  } else if (photoFiles[`/src/assets/photos/${d.image}`]) {
+    heroImage = photoFiles[`/src/assets/photos/${d.image}`].default;
+    heroAlt = `${d.name} in the Quantum Comms fleet`;
+    ownPhoto = true;
+  }
+}
+
+// Specification rows, only for fields the register actually has.
+const specs: Array<[string, string]> = [];
+const add = (term: string, value?: string | number | null) => {
+  if (value !== undefined && value !== null && value !== '') specs.push([term, String(value)]);
+};
+add('Unit', d.name);
+add('Class', classLabel[d.unitClass]);
+add('Platform OEM', d.oem);
+add('Model', d.model);
+add('Chassis', d.chassis);
+add('Working height', d.workingHeight ? fmtHeight(d.workingHeight) : undefined);
+add('Outreach', d.outreach ? fmtHeight(d.outreach) : undefined);
+add('Safe working load', d.swlKg ? `${d.swlKg} kg` : undefined);
+add('Insulation', d.insulated ? `${d.insulated} insulated` : undefined);
+add('Maximum wind speed', d.maxWindMs ? `${d.maxWindMs} m/s` : undefined);
+add('Gross vehicle mass', d.gvwT ? `${d.gvwT} t` : undefined);
+add('Transport length', d.transport?.length ? `${d.transport.length} m` : undefined);
+add('Transport width', d.transport?.width ? `${d.transport.width} m` : undefined);
+add('Transport height', d.transport?.height ? `${d.transport.height} m` : undefined);
+add('Working cage', d.cage);
+add('Rotation', d.rotation);
+add('Driver licence', d.licence ? `${d.licence}${licenceLabel[d.licence] ? ` (${licenceLabel[d.licence]})` : ''}` : undefined);
+add('Drive', d.fourWd ? 'All-wheel drive' : undefined);
+
+/**
+ * The two or three figures a planner checks first, all read from this entry. A safe working
+ * load that carries a qualifier in words stays in the specification list, where it can be read
+ * in full, rather than being cut down to fit a large numeral.
+ */
+const plainSwl = d.swlKg && /^\d+(\.\d+)?( to \d+(\.\d+)?)?$/.test(d.swlKg) ? d.swlKg : null;
+const headline: Array<{ n: string; text?: boolean; l: string }> = [];
+if (d.workingHeight) headline.push({ n: fmtHeight(d.workingHeight), l: 'Working height' });
+if (d.outreach) headline.push({ n: fmtHeight(d.outreach), l: 'Outreach' });
+if (plainSwl) headline.push({ n: `${plainSwl} kg`, text: plainSwl.includes(' '), l: 'Safe working load' });
+if (headline.length < 4 && d.maxWindMs) headline.push({ n: `${d.maxWindMs} m/s`, l: 'Maximum wind speed' });
+if (headline.length < 4 && d.gvwT) headline.push({ n: `${d.gvwT} t`, l: 'Gross vehicle mass' });
+
+const jacking = (
+  [
+    ['Normal jacking', d.jacking?.normal],
+    ['One-side jacking', d.jacking?.oneSide],
+    ['Narrow jacking', d.jacking?.narrow],
+  ] as Array<[string, string | undefined]>
+).filter((row): row is [string, string] => Boolean(row[1]));
+
+// Home depots resolved against the depots collection; only confirmed depots get links.
+const allDepots = await getCollection('depots');
+const homeDepots = d.homeDepots.map((id) => ({ id, depot: allDepots.find((x) => x.id === id) ?? null }));
+
+// Related units: same class first, otherwise the rest of the register.
+const register = await fleetAll();
+const sameClass = register.filter((u) => u.id !== unit.id && u.data.unitClass === d.unitClass);
+const related = (sameClass.length ? sameClass : register.filter((u) => u.id !== unit.id)).slice(0, 3);
+const relatedHeading = sameClass.length ? `Other ${classLabel[d.unitClass].toLowerCase()} units` : 'Other units on the register';
+
+const fmtDate = (iso: string) => {
+  const [y, m, day] = iso.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+const status = statusInfo[d.status];
+// Meta description, held within 120 to 160 characters by dropping detail when the unit name is long.
+const heightBit = d.workingHeight ? `${fmtHeight(d.workingHeight)} working height` : '';
+const outreachBit = d.outreach ? `${fmtHeight(d.outreach)} outreach` : '';
+const descTail = 'Quantum Comms register specification, jacking footprint, home depot, status and hire enquiry form.';
+let description = '';
+for (const bits of [[heightBit, outreachBit].filter(Boolean).join(', '), heightBit, '']) {
+  description = `${d.name}${bits ? `: ${bits}` : ''}. ${descTail}`;
+  if (description.length <= 160) break;
+}
+
+const site = company.siteUrl;
+const pageUrl = `${site}${unitHref(unit)}`;
+const propertyRows = [
+  d.workingHeight ? { name: 'Working height', value: d.workingHeight, unitCode: 'MTR', unitText: 'm' } : null,
+  d.outreach ? { name: 'Outreach', value: d.outreach, unitCode: 'MTR', unitText: 'm' } : null,
+  d.swlKg ? { name: 'Safe working load', value: d.swlKg, unitCode: 'KGM', unitText: 'kg' } : null,
+  d.insulated ? { name: 'Insulation rating', value: d.insulated } : null,
+  d.maxWindMs ? { name: 'Maximum wind speed', value: d.maxWindMs, unitCode: 'MTS', unitText: 'm/s' } : null,
+  d.gvwT ? { name: 'Gross vehicle mass', value: d.gvwT, unitCode: 'TNE', unitText: 't' } : null,
+  d.transport?.length ? { name: 'Transport length', value: d.transport.length, unitCode: 'MTR', unitText: 'm' } : null,
+  d.transport?.width ? { name: 'Transport width', value: d.transport.width, unitCode: 'MTR', unitText: 'm' } : null,
+  d.transport?.height ? { name: 'Transport height', value: d.transport.height, unitCode: 'MTR', unitText: 'm' } : null,
+  d.jacking?.normal ? { name: 'Normal jacking footprint', value: d.jacking.normal } : null,
+  d.jacking?.oneSide ? { name: 'One-side jacking footprint', value: d.jacking.oneSide } : null,
+  d.jacking?.narrow ? { name: 'Narrow jacking footprint', value: d.jacking.narrow } : null,
+  d.cage ? { name: 'Working cage', value: d.cage } : null,
+  d.rotation ? { name: 'Rotation', value: d.rotation } : null,
+  d.licence ? { name: 'Driver licence class', value: d.licence } : null,
+  d.fourWd ? { name: 'All-wheel drive', value: 'Yes' } : null,
+  { name: 'Register status', value: status.label },
+].filter((p): p is NonNullable<typeof p> => p !== null);
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  '@id': `${pageUrl}#product`,
+  name: d.name,
+  alternateName: d.shortName,
+  description,
+  url: pageUrl,
+  category: `${classLabel[d.unitClass]} elevating work platform`,
+  image: new URL(heroImage.src, Astro.site).href,
+  ...(d.oem && d.oem !== 'To be confirmed' ? { brand: { '@type': 'Brand', name: d.oem } } : {}),
+  ...(d.model ? { model: d.model } : {}),
+  additionalProperty: propertyRows.map((p) => ({ '@type': 'PropertyValue', ...p })),
+  offers: {
+    '@type': 'Offer',
+    businessFunction: 'http://purl.org/goodrelations/v1#LeaseOut',
+    availability: d.status === 'in-service' ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
+    areaServed: 'AU',
+    url: pageUrl,
+    seller: { '@id': `${site}/#organization` },
+  },
+};
+---
+<Base title={d.name} description={description} jsonLd={jsonLd}>
+  <Hero variant="photo" eyebrow={`${classLabel[d.unitClass]} EWP`} title={d.name} lead={`${d.shortName}. ${status.meaning}`} image={heroImage} imageAlt={heroAlt}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Fleet', href: '/fleet/' }, { label: d.shortName }]} />
+    <p class="status">
+      <span class={`chip ${status.cls}`}>{status.label}</span>
+      {d.insulated && <span class="chip chip--navy">{d.insulated} insulated</span>}
+      {d.fourWd && <span class="chip">All-wheel drive</span>}
+      {d.licence && <span class="chip">{d.licence} licence</span>}
+    </p>
+    <div class="btn-row">
+      <a class="btn btn--primary" href="#enquiry">Enquire about this unit</a>
+      <a class="btn btn--secondary" href="/fleet/how-hire-works/">How hire works</a>
+    </div>
+    {!ownPhoto && <p class="caption hero-caption">Representative fleet photo. A photo of this unit will be added when supplied.</p>}
+  </Hero>
+
+  {headline.length > 1 && (
+    <section class="section section--tight section--white">
+      <div class="container">
+        <ul class="statband reveal" aria-label={`Headline specifications for the ${d.shortName}`}>
+          {headline.map((s) => (
+            <li>
+              <span class:list={['statband__n', { 'statband__n--text': s.text }]}>{s.n}</span>
+              <span class="statband__l">{s.l}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Specification</p>
+        <h2>Register specification</h2>
+      </div>
+      <div class="spec-grid reveal">
+        <div class="specsheet">
+          <dl class="spec">
+            {specs.map(([term, value]) => (
+              <>
+                <dt>{term}</dt>
+                <dd>{value}</dd>
+              </>
+            ))}
+          </dl>
+          <p class="caption source">
+            Source: {d.meta.source}.{' '}
+            {d.meta.lastVerified
+              ? `Last verified ${fmtDate(d.meta.lastVerified)}.`
+              : 'Not yet verified against the current fleet; confirm with the depot before you rely on it for a lift plan.'}
+          </p>
+          {d.notes && <p class="notice notice--info">{d.notes}</p>}
+        </div>
+        <aside class="side">
+          <h3 class="side__h">Jacking footprint</h3>
+          {jacking.length > 0 ? (
+            <>
+              <dl class="spec side__spec">
+                {jacking.map(([term, value]) => (
+                  <>
+                    <dt>{term}</dt>
+                    <dd>{value}</dd>
+                  </>
+                ))}
+              </dl>
+              <p class="caption">Outrigger spread as width by length. Narrow and one-side jacking reduce the footprint at the cost of working envelope; the operator confirms the setup on site against ground conditions.</p>
+            </>
+          ) : (
+            <p class="caption">The register does not yet state a jacking footprint for this unit. Ask the depot for the OEM outrigger chart when planning the setup.</p>
+          )}
+
+          <h3 class="side__h">Home depot</h3>
+          {homeDepots.length > 0 ? (
+            <ul class="plain">
+              {homeDepots.map(({ id, depot }) => (
+                <li>
+                  {depot ? (
+                    depot.data.confirmed ? <a href={depotHref(depot)}>{depot.data.name}</a> : <span>{depot.data.name} (to be confirmed)</span>
+                  ) : (
+                    <span>{id} (depot not on the register)</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="caption">Home depot to be confirmed.</p>
+          )}
+          <p class="caption">Units travel to sites in other states. Travel is quoted per job.</p>
+
+          <h3 class="side__h">Status</h3>
+          <p><span class={`chip ${status.cls}`}>{status.label}</span></p>
+          <p class="caption mb-0">{status.meaning}</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {d.idealFor.length > 0 && (
+    <section class="section section--dark feature">
+      <div class="feature__bg" aria-hidden="true">
+        <Image src={photos.basketOnMonopole} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+      </div>
+      <div class="container feature__inner">
+        <div class="feature__text reveal">
+          <div class="section-head__rule"></div>
+          <p class="eyebrow">Suited to</p>
+          <h2>Ideal for</h2>
+          <ul class="ideal">
+            {d.idealFor.map((item) => <li>{item}</li>)}
+          </ul>
+          <p class="feature__note">Tell us the site, the working height and outreach you need, and the ground conditions. The depot will confirm whether this unit or another on the <a href={classHref[d.unitClass]}>register</a> is the right fit.</p>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--mist" id="enquire">
+    <div class="container">
+      <div class="enquire-grid reveal">
+        <div>
+          <div class="section-head colhead">
+            <div class="section-head__rule"></div>
+            <p class="eyebrow">Hire</p>
+            <h2>Booking this unit</h2>
+          </div>
+          <p>Wet hire comes with one of our operators; dry hire is for longer terms with your own inducted operator. Both are covered on the <a href="/fleet/how-hire-works/">how hire works</a> page and in the <a href="/hire-terms/">hire terms</a>.</p>
+          <p>Include in your message:</p>
+          <ul>
+            <li>Site address and access, including any weight or height limits on the approach.</li>
+            <li>Dates and expected hours per day.</li>
+            <li>Working height and outreach you need, and what goes in the basket.</li>
+            <li>Whether the work is near power lines, and any carrier or utility induction the site requires.</li>
+          </ul>
+          {d.status !== 'in-service' && (
+            <p class="notice">This unit is not yet available to book. Send an enquiry to register interest and the depot will suggest an in-service alternative.</p>
+          )}
+        </div>
+        <EnquiryForm topic="hire" heading={`Enquire about the ${d.shortName}`} />
+      </div>
+    </div>
+  </section>
+
+  {related.length > 0 && (
+    <section class="section section--white">
+      <div class="container">
+        <div class="section-head reveal">
+          <div class="section-head__rule"></div>
+          <p class="eyebrow">Related</p>
+          <h2>{relatedHeading}</h2>
+        </div>
+        <div class="grid grid--3 reveal">
+          {related.map((u) => (
+            <a class="card card--link" href={unitHref(u)}>
+              <span class="chip-row">
+                <span class={`chip ${statusInfo[u.data.status].cls}`}>{statusInfo[u.data.status].label}</span>
+              </span>
+              <h3>{u.data.shortName}</h3>
+              <p>{u.data.name}</p>
+              <dl class="spec spec--compact">
+                <dt>Working height</dt><dd>{fmtHeight(u.data.workingHeight)}</dd>
+                <dt>Outreach</dt><dd>{fmtHeight(u.data.outreach)}</dd>
+                <dt>SWL</dt><dd>{u.data.swlKg ? `${u.data.swlKg} kg` : NOT_STATED}</dd>
+              </dl>
+              <span class="arrow-link card__cta">Unit details</span>
+            </a>
+          ))}
+        </div>
+        <p class="mt"><a class="arrow-link" href="/fleet/">Full fleet register</a></p>
+      </div>
+    </section>
+  )}
+
+  <CtaBand
+    heading="Need this unit on a date, or the register on file?"
+    text="The depot confirms availability, operator and travel from your site details. The capability statement and hire terms are available for your procurement file."
+    primary={{ label: 'Hire terms', href: '/hire-terms/' }}
+    secondary={{ label: 'Contact a depot', href: '/contact/' }}
+  />
+</Base>
+
+<style>
+  .status { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.25rem; }
+  /* Chip labels here are phrases, so they must be allowed to wrap on a 320 px screen. */
+  .status .chip, .chip-row .chip { white-space: normal; }
+  .hero-caption { margin-top: 1rem; }
+
+  .spec-grid { display: grid; gap: clamp(1.75rem, 4vw, 3.5rem); align-items: start; min-width: 0; }
+  .spec-grid > * { min-width: 0; }
+  @media (min-width: 860px) { .spec-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+
+  /* The specification reads as a data sheet: one hairline per row, the value in Ink, room to
+     breathe between rows. Two columns where there is space, stacked below that so chassis
+     names and jacking footprints never push the page sideways. */
+  .spec { grid-template-columns: minmax(0, max-content) minmax(0, 1fr); row-gap: 0; }
+  .spec dd { word-break: break-word; overflow-wrap: anywhere; }
+  .spec dt { overflow-wrap: anywhere; }
+  .specsheet .spec { border-bottom: 1px solid var(--concrete); }
+  .specsheet .spec dt, .specsheet .spec dd { padding-block: 0.75rem; border-top: 1px solid var(--concrete); }
+  .specsheet .spec dd { color: var(--ink); font-weight: 500; }
+  /* Matches the stacking breakpoint in global.css, so the row rule follows the pair. */
+  @media (max-width: 520px) {
+    .spec { grid-template-columns: minmax(0, 1fr); }
+    .specsheet .spec dt { margin-top: 0; padding-bottom: 0; }
+    .specsheet .spec dd { padding-top: 0.15rem; border-top: 0; }
+  }
+
+  .source { margin-top: 1.25rem; }
+
+  /* The side panel is a quieter surface beside the sheet, squared off rather than boxed in. */
+  .side { background: var(--mist); border: 1px solid var(--line); border-top: 3px solid var(--ink); border-radius: 0; padding: clamp(1.25rem, 3vw, 2rem); }
+  .side__h { font-size: var(--fs-h4); margin: 2rem 0 0.6rem; }
+  .side__h:first-child { margin-top: 0; }
+  .side__spec { row-gap: 0.35rem; }
+  .plain { list-style: none; padding: 0; margin: 0 0 0.5rem; }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 60ch; }
+  .feature__note { color: var(--on-ink-quiet); font-size: var(--fs-dense); margin: 0; }
+  .ideal { margin: 1.25rem 0 1.5rem; padding-left: 1.2rem; max-width: none; }
+  .ideal li { margin-bottom: 0.5rem; }
+  .ideal li::marker { color: var(--quantum-green); }
+
+  /* Column heads inside a split need less air than a full section head. */
+  .colhead { margin-bottom: clamp(1.25rem, 2.5vw, 1.75rem); }
+
+  .enquire-grid { display: grid; gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+  .enquire-grid > * { min-width: 0; }
+  @media (min-width: 960px) { .enquire-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); } }
+
+  .chip-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .spec--compact { font-size: var(--fs-caption); gap: 0.2rem 1rem; row-gap: 0.2rem; }
+  .card__cta { margin-top: auto; }
+  .mt { margin-top: 1.5rem; }
+</style>

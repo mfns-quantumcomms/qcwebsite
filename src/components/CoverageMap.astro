@@ -1,0 +1,90 @@
+---
+/**
+ * Coverage map of Australia, drawn inline from simplified ABS state boundaries.
+ * No tiles, no third party, no JavaScript. Scales from a phone to a print sheet.
+ *
+ * States are shaded by role: a confirmed depot, coverage serviced from a depot, or neither.
+ * Pins come from the depot register, so an unconfirmed depot never appears.
+ */
+import { auStatePaths, auViewBox, projectAU } from '@data/au-map';
+import { confirmedDepots, coverageStates, stateNames } from '../lib/facts';
+
+interface Props {
+  variant?: 'light' | 'dark';
+  showLabels?: boolean;
+  class?: string;
+  caption?: string;
+}
+const { variant = 'light', showLabels = true, class: cls = '', caption } = Astro.props;
+
+const depots = await confirmedDepots();
+const covered = await coverageStates();
+const depotStates: string[] = [...new Set(depots.map((d) => d.data.state as string))];
+
+const pins = depots
+  .filter((d) => d.data.geo)
+  .map((d) => ({
+    id: d.id,
+    label: `${d.data.suburb} ${d.data.state}`,
+    role: d.data.role,
+    ...projectAU(d.data.geo!.lat, d.data.geo!.lng),
+  }));
+
+// Nudge labels so two depots in the same city do not print on top of each other.
+const placed: { x: number; y: number }[] = [];
+const labelled = pins.map((p) => {
+  let dy = -14;
+  while (placed.some((q) => Math.abs(q.x - p.x) < 90 && Math.abs(q.y - (p.y + dy)) < 22)) dy += 26;
+  placed.push({ x: p.x, y: p.y + dy });
+  return { ...p, dy };
+});
+
+const c = variant === 'dark'
+  ? { land: '#26313A', landEdge: '#3E4C57', depot: '#1E6B27', cover: '#2C3A44', pin: '#3F9C2F', pinRing: '#15191C', label: '#E7E9EB', legend: '#A9B1B7' }
+  : { land: '#E4E9EE', landEdge: '#C9CED1', depot: '#CFE4D6', cover: '#DCE4EB', pin: '#1E6B27', pinRing: '#FFFFFF', label: '#15191C', legend: '#6C767D' };
+
+const fillFor = (s: string) => (depotStates.includes(s) ? c.depot : covered.includes(s) ? c.cover : c.land);
+const describe = `Map of Australia. Depots in ${depotStates.map((s) => stateNames[s]).join(' and ')}. Service coverage in ${covered.map((s) => stateNames[s]).join(', ')}.`;
+---
+<figure class:list={['covmap', `covmap--${variant}`, cls]}>
+  <svg viewBox={auViewBox} role="img" aria-label={describe} class="covmap__svg">
+    <g>
+      {Object.entries(auStatePaths).map(([code, dPath]) => (
+        <path d={dPath} fill={fillFor(code)} stroke={c.landEdge} stroke-width="2" stroke-linejoin="round" />
+      ))}
+    </g>
+    {labelled.map((p) => (
+      <g>
+        <circle cx={p.x} cy={p.y} r="16" fill={c.pin} stroke={c.pinRing} stroke-width="5" />
+        {showLabels && (
+          <text x={p.x} y={p.y + p.dy} text-anchor="middle" class="covmap__label" fill={c.label}>{p.label}</text>
+        )}
+      </g>
+    ))}
+  </svg>
+  <ul class="covmap__legend" style={`color:${c.legend}`}>
+    <li><span class="covmap__key" style={`background:${c.depot};border-color:${c.landEdge}`}></span>Depot</li>
+    <li><span class="covmap__key" style={`background:${c.cover};border-color:${c.landEdge}`}></span>Serviced from a depot</li>
+    <li><span class="covmap__key covmap__key--pin" style={`background:${c.pin};border-color:${c.pinRing}`}></span>Depot location</li>
+  </ul>
+  {caption && <figcaption class="covmap__cap">{caption}</figcaption>}
+</figure>
+
+<style>
+  .covmap { margin: 0; display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+  .covmap__svg { width: 100%; height: auto; display: block; overflow: visible; }
+  /* Place names take the display weight, one of the three the brand allows. */
+  .covmap__label { font-family: var(--font-display); font-weight: 600; font-size: 30px; letter-spacing: 0.01em; paint-order: stroke; stroke: rgba(255, 255, 255, 0.85); stroke-width: 7px; stroke-linejoin: round; }
+  .covmap--dark .covmap__label { stroke: rgba(21, 25, 28, 0.85); }
+  /* The legend is a key, so it is set as a row of labels above a hairline, not as body text. */
+  .covmap__legend { list-style: none; margin: 0; padding-top: 0.9rem; border-top: 1px solid var(--concrete); display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: var(--fs-caption); max-width: none; }
+  .covmap--dark .covmap__legend { border-top-color: var(--rule-on-ink); }
+  .covmap__legend li { display: flex; align-items: center; gap: 0.5rem; margin: 0; min-width: 0; }
+  .covmap__key { width: 14px; height: 14px; border-radius: 2px; border: 1px solid; flex: 0 0 auto; }
+  .covmap__key--pin { border-radius: 50%; border-width: 2px; }
+  .covmap__cap { font-size: var(--fs-caption); color: var(--steel); max-width: var(--measure); }
+  .covmap--dark .covmap__cap { color: var(--on-ink-quiet); }
+  @media (max-width: 560px) {
+    .covmap__label { font-size: 38px; }
+  }
+</style>

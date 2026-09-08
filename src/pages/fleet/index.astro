@@ -1,0 +1,328 @@
+---
+/**
+ * Fleet register index. Every figure on this page is read from src/content/fleet;
+ * nothing numeric is typed here. Statuses are explained, not implied.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import FleetTable from '@components/FleetTable.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { photos, alts } from '@data/images';
+import { fleetAll, registerMaxHeight, depotHref, fmtHeight } from '../../lib/facts';
+
+const units = await fleetAll();
+const top = await registerMaxHeight();
+const allDepots = await getCollection('depots');
+
+type UnitClass = CollectionEntry<'fleet'>['data']['unitClass'];
+const classLabel: Record<UnitClass, string> = {
+  'truck-mounted': 'Truck-mounted',
+  'trailer-mounted': 'Trailer-mounted',
+  insulated: 'Insulated',
+  plant: 'Plant',
+};
+const classesPresent = Array.from(new Set(units.map((u) => u.data.unitClass)));
+
+// Depots that register entries name as a home base, resolved against the depots collection.
+const homeDepotIds = Array.from(new Set(units.flatMap((u) => u.data.homeDepots)));
+const homeDepots = homeDepotIds
+  .map((id) => allDepots.find((d) => d.id === id))
+  .filter((d): d is CollectionEntry<'depots'> => Boolean(d))
+  .sort((a, b) => a.data.order - b.data.order);
+
+// Verification state of the register as a whole.
+const verifiedDates = units
+  .map((u) => u.data.meta.lastVerified)
+  .filter((v): v is string => Boolean(v))
+  .sort();
+const lastVerified = verifiedDates.at(-1) ?? null;
+const fmtDate = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+const topPhrase =
+  top && top.status === 'on-order'
+    ? `The tallest unit on the register, the ${top.name}, is on order and not yet available to hire.`
+    : top && top.status === 'to-confirm'
+      ? `The tallest unit on the register, the ${top.name}, is awaiting confirmation.`
+      : '';
+
+/**
+ * Headline figures, all read from the register above. Units that are not in service are named
+ * with their status, so no figure on this band can be read as available to book.
+ */
+const inService = units.filter((u) => u.data.status === 'in-service');
+const tallestInService = inService.filter((u) => u.data.workingHeight)[0] ?? null;
+const longestInService = [...inService]
+  .filter((u) => u.data.outreach)
+  .sort((a, b) => (b.data.outreach ?? 0) - (a.data.outreach ?? 0))[0] ?? null;
+const stats: Array<{ n: string; text?: boolean; l: string }> = [
+  ...(top && top.status !== 'in-service'
+    ? [{ n: fmtHeight(top.height), l: `Greatest working height on the register, the ${top.name}, ${top.status === 'on-order' ? 'on order' : 'awaiting confirmation'}` }]
+    : []),
+  ...(tallestInService
+    ? [{ n: fmtHeight(tallestInService.data.workingHeight), l: `Greatest working height in service, the ${tallestInService.data.shortName}` }]
+    : []),
+  ...(longestInService
+    ? [{ n: fmtHeight(longestInService.data.outreach), l: `Greatest outreach in service, the ${longestInService.data.shortName}` }]
+    : []),
+  { n: 'Wet or dry', text: true, l: 'Hire with one of our operators, or on your own inducted operator' },
+];
+
+/** Class pages, each with a frame from the library. Alt text is the library's, not the label's. */
+const classCards = [
+  { href: '/fleet/trailer-mounted/', label: 'Class', title: 'Trailer-mounted EWPs', photo: 'monopoleSky' as const,
+    text: 'Towable platforms for lighter work and sites a truck cannot enter.', cta: 'Trailer-mounted' },
+  { href: '/fleet/insulated/', label: 'Class', title: 'Insulated units', photo: 'ewpLatticeTower' as const,
+    text: 'LV and HV insulated platforms for work near live lines, with electrical spotters.', cta: 'Insulated units' },
+  { href: '/fleet/generators-and-plant/', label: 'Plant', title: 'Generators and plant', photo: 'generatorFenced' as const,
+    text: 'Excavators, augers, crane trucks, winches and test instruments on dry hire.', cta: 'Generators and plant' },
+  { href: '/fleet/how-hire-works/', label: 'Terms', title: 'How hire works', photo: 'truckUnitDepot' as const,
+    text: 'Wet versus dry, operator credentials, prestarts, minimum terms and dilapidation reports.', cta: 'How hire works' },
+];
+
+const description =
+  'Quantum Comms fleet register: truck-mounted EWPs with working height, outreach, SWL, chassis and jacking footprint per unit, plus insulated units and plant.';
+---
+<Base title="Fleet register" description={description}>
+  <Hero
+    variant="photo"
+    eyebrow="Fleet and hire"
+    title="Fleet register"
+    lead="Every unit we hire out is listed here with the figures a planner needs: working height, outreach, safe working load, chassis and jacking footprint. Wet or dry hire, short or long term."
+    image={photos.fleetYard}
+    imageAlt={alts.fleetYard}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Fleet' }]} />
+    <div class="btn-row">
+      <a class="btn btn--primary" href="#register">Go to the register</a>
+      <a class="btn btn--secondary" href="/fleet/how-hire-works/">How hire works</a>
+    </div>
+  </Hero>
+
+  <section class="section section--tight section--white">
+    <div class="container">
+      <ul class="statband reveal" aria-label="Register figures">
+        {stats.map((s) => (
+          <li>
+            <span class:list={['statband__n', { 'statband__n--text': s.text }]}>{s.n}</span>
+            <span class="statband__l">{s.l}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Hire model</p>
+        <h2>Wet hire or dry hire, your choice</h2>
+        <p class="lead">Both models use the same units and the same register. The difference is who operates the platform and what you take responsibility for.</p>
+      </div>
+      <div class="grid grid--2 reveal">
+        <div class="card">
+          <h3>Wet hire</h3>
+          <p>The unit arrives with one of our operators. Operators hold the licences, currency and carrier inductions listed on the hire page, and most have rigging and dogging experience, so the operator can work as part of your crew.</p>
+          <p>Best when you need the platform for a defined job, when the site needs a carrier-inducted operator, or when the work is near power.</p>
+          <a class="arrow-link card__cta" href="/fleet/how-hire-works/#wet-hire">Wet hire conditions</a>
+        </div>
+        <div class="card">
+          <h3>Dry hire</h3>
+          <p>You take the unit for a longer term and supply your own operator. Your operator is inducted onto the specific unit and completes a competency course before the platform is released.</p>
+          <p>Best for programmes with steady EWP demand and your own qualified operators. A minimum hire period and dilapidation reports apply.</p>
+          <a class="arrow-link card__cta" href="/fleet/how-hire-works/#dry-hire">Dry hire conditions</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white" id="register">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Register</p>
+        <h2>All units</h2>
+        <p class="lead">Select a unit for its full specification, jacking footprint, home depot and an enquiry form. Sorted by working height. {topPhrase}</p>
+      </div>
+
+      <div class="reveal">
+        <div class="filters" data-filters hidden>
+          <span class="filters__label" id="filter-label">Show</span>
+          <div class="filters__group" role="group" aria-labelledby="filter-label">
+            <button type="button" class="filter" data-class="all" aria-pressed="true">All units</button>
+            {classesPresent.map((c) => (
+              <button type="button" class="filter" data-class={c} aria-pressed="false">{classLabel[c]}</button>
+            ))}
+          </div>
+          <p class="visually-hidden" aria-live="polite" data-filter-status></p>
+        </div>
+
+        <div data-register>
+          <h3 class="reg__cap" id="register-caption">Full fleet register, all classes and statuses</h3>
+          <p class="reg__hint" id="register-hint">Seven columns. On a narrow screen, scroll the table sideways to reach chassis and status.</p>
+          <div class="reg__scroll" tabindex="0" role="region" aria-labelledby="register-caption" aria-describedby="register-hint">
+            <FleetTable units={units} caption="Full fleet register, all classes and statuses" showClass={true} scrollable={false} />
+          </div>
+        </div>
+      </div>
+
+      <section class="legend reveal" aria-labelledby="legend-h">
+        <h3 id="legend-h" class="legend__h">What the status column means</h3>
+        <dl class="legend__list">
+          <div>
+            <dt><span class="chip chip--green">In service</span></dt>
+            <dd>On the register and available to hire, subject to scheduling and site suitability.</dd>
+          </div>
+          <div>
+            <dt><span class="chip chip--warn">On order</span></dt>
+            <dd>Purchased and publicly reported, but not yet delivered or commissioned. Full specifications are published from the OEM data sheet after delivery. Not available to book.</dd>
+          </div>
+          <div>
+            <dt><span class="chip">To confirm</span></dt>
+            <dd>Listed in a company document. Its place in the current fleet is being confirmed. Ask the depot before planning around it.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <div class="notice notice--info verify reveal">
+        <p><strong>Where these figures come from.</strong> Specifications are transcribed from our published fleet portfolio and OEM data sheets into the register that generates this page. Each unit page names its source.</p>
+        {lastVerified ? (
+          <p class="mb-0">Register last verified against the fleet on {fmtDate(lastVerified)}.</p>
+        ) : (
+          <p class="mb-0">The register has not yet been verified against the current fleet. Confirm the unit, its status and its specification with the depot before you rely on it for a lift plan.</p>
+        )}
+      </div>
+
+      {homeDepots.length > 0 && (
+        <p class="caption reveal">
+          Units on the register are based at{' '}
+          {homeDepots.map((d, i) => (
+            <>
+              {i > 0 && (i === homeDepots.length - 1 ? ' and ' : ', ')}
+              {d.data.confirmed ? <a href={depotHref(d)}>{d.data.suburb} {d.data.state}</a> : <span>{d.data.suburb} {d.data.state} (to be confirmed)</span>}
+            </>
+          ))}. Units and crews travel to sites in other states; travel is quoted per job.
+        </p>
+      )}
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.ewpGreenSite} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Fitted for site work</p>
+        <h2>What comes with a truck-mounted unit</h2>
+        <p class="lead">Our capability statement lists what the fleet is set up for. Availability of each item on a given unit is confirmed at booking.</p>
+        <ul class="fitted">
+          <li>Lifting arms or winches fitted, for lifting antennas, RRUs and small steelwork with the platform.</li>
+          <li>All-wheel-drive chassis on the units marked for it, for unsealed access tracks and greenfield sites.</li>
+          <li>Narrow jacking and one-sided jacking on the units that list it, for kerbside and single-lane setups.</li>
+          <li>Extendable baskets on selected units.</li>
+          <li>Bog mats for soft ground.</li>
+          <li>Low-voltage and high-voltage insulated units, and electrical spotters, for work near live lines.</li>
+        </ul>
+        <a class="arrow-link" href="/fleet/how-hire-works/">Read what arrives with the unit and what we need from you</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">By class</p>
+        <h2>Other classes, plant and terms</h2>
+      </div>
+      <div class="grid grid--4 reveal">
+        {classCards.map((c) => (
+          <a class="media-card" href={c.href}>
+            <div class="media-card__media">
+              <Image src={photos[c.photo]} alt={alts[c.photo]} widths={[320, 640]} sizes="(min-width: 1000px) 25vw, (min-width: 640px) 50vw, 100vw" />
+            </div>
+            <div class="media-card__body">
+              <span class="media-card__label">{c.label}</span>
+              <h3 class="media-card__title">{c.title}</h3>
+              <p>{c.text}</p>
+              <span class="arrow-link">{c.cta}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need a unit on a date, or the register on file?"
+    text="Send the site, dates and working height and the depot will confirm the unit and operator. Hire terms and the capability statement are available for your procurement file."
+    primary={{ label: 'Enquire about hire', href: '/fleet/how-hire-works/#enquiry' }}
+    secondary={{ label: 'Hire terms', href: '/hire-terms/' }}
+  />
+</Base>
+
+<script>
+  // Progressive enhancement: filter register rows by class. Without JS every row shows.
+  const wrap = document.querySelector<HTMLElement>('[data-filters]');
+  const rows = Array.from(document.querySelectorAll<HTMLTableRowElement>('[data-register] tbody tr'));
+  const status = wrap?.querySelector<HTMLElement>('[data-filter-status]');
+  if (wrap && rows.length) {
+    wrap.hidden = false;
+    const buttons = Array.from(wrap.querySelectorAll<HTMLButtonElement>('[data-class]'));
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cls = btn.dataset.class ?? 'all';
+        rows.forEach((row) => {
+          row.hidden = cls !== 'all' && row.dataset.class !== cls;
+        });
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        if (status) status.textContent = cls === 'all' ? 'Showing all units.' : `Showing ${btn.textContent?.trim()} units only.`;
+      });
+    });
+  }
+</script>
+
+<style>
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin-bottom: 1.25rem; }
+  .filters__label { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-eyebrow); color: var(--steel); text-transform: uppercase; letter-spacing: 0.14em; }
+  .filters__group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .filter { min-height: 44px; padding: 0.5rem 1rem; border: 1.5px solid var(--ink); border-radius: var(--radius); background: var(--white); color: var(--ink); font-family: var(--font-display); font-weight: 500; font-size: var(--fs-dense); cursor: pointer; }
+  .filter:hover { background: var(--concrete); }
+  .filter[aria-pressed="true"] { background: var(--ink); color: var(--white); }
+  /* Register table: the scroll container is the page's, so it can carry a name and a tab stop. */
+  .reg__cap { font-size: var(--fs-h4); margin: 0 0 0.25rem; }
+  .reg__hint { font-size: var(--fs-caption); color: var(--steel); margin: 0 0 0.6rem; max-width: var(--measure); }
+  .reg__scroll { overflow-x: auto; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+  .reg__scroll :global(.table-wrap) { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .reg__scroll :global(table) { min-width: 44rem; }
+  .reg__scroll :global(.chip) { white-space: normal; }
+  .card__cta { margin-top: auto; align-self: flex-start; }
+  .legend { margin-top: clamp(1.75rem, 3vw, 2.5rem); }
+  .legend__h { font-size: var(--fs-h4); }
+  .legend__list { display: grid; gap: 0.75rem 1.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); margin: 0; }
+  .legend__list div { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+  .legend__list dt { margin: 0; }
+  .legend__list dd { margin: 0; font-size: var(--fs-dense); }
+  .verify { margin-top: 1.5rem; max-width: var(--measure); }
+  .verify p { margin-bottom: 0.5em; }
+  .caption { margin-top: 1rem; }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 62ch; }
+  .fitted { margin: 1.25rem 0 1.5rem; padding-left: 1.2rem; max-width: none; }
+  .fitted li { margin-bottom: 0.5rem; }
+  .fitted li::marker { color: var(--quantum-green); }
+</style>

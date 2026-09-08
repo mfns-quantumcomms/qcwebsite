@@ -1,0 +1,16 @@
+name: Craigieburn head office
+role: Head office
+state: VIC
+street: Unit 1, 4-6 Nova Court
+suburb: Craigieburn
+postcode: "3064"
+phone: { display: "03 9219 0948", tel: "+61392190948" }
+email: admin@quantumcomms.com.au
+hours: Monday to Friday, 7:00 am to 4:00 pm
+timezone: Australia/Melbourne
+confirmed: true
+geo: { lat: -37.600698, lng: 144.94798 }
+mapUrl: https://www.google.com/maps/place/Quantum+Comms/@-37.6002324,144.9463137,17z/data=!3m1!4b1!4m5!3m4!1s0x6ad651ef015e3481:0xc8135d887c78971a!8m2!3d-37.6003655!4d144.9484998
+capabilities: [Head office and project management, Truck-mounted EWP fleet, Rigging crews, Civil crews, Wet and dry hire]
+order: 1
+meta: { verified: true, source: "Site footer, Capability Statement Rev 10, Google Business Profile", lastVerified: "2026-09-07" }

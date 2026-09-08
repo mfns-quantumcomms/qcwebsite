@@ -1,0 +1,72 @@
+# Builds the site and publishes it to GitHub Pages.
+#
+# This is for review and demonstration. Production is Cloudflare Pages, which also runs the
+# enquiry function in functions/api and applies public/_headers and public/_redirects. On
+# GitHub Pages those three do not run, so the enquiry form cannot submit and the security
+# headers are absent. Everything else is identical.
+#
+# One-time setup: repository Settings, Pages, Source: GitHub Actions.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve the Pages base path
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build
+        run: npm run build
+        env:
+          # Canonical URLs and the sitemap point at the Pages URL for this preview.
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+
+      # A project site is served from /<repo>/, so the built links are rebased onto it.
+      # With a custom domain the base path is empty and this step does nothing.
+      - name: Rebase links onto the Pages sub-path
+        run: node scripts/rebase-links.mjs
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+
+      - name: Tell Pages not to run Jekyll
+        run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

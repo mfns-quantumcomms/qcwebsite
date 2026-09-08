@@ -1,0 +1,108 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { company, currentYear } from '@data/company';
+
+const description = 'Quantum Comms aims for WCAG 2.2 AA on this website. What we have done, what we are still checking, and how to tell us about an accessibility problem.';
+const sections = [
+  { id: 'commitment', title: 'Our target' },
+  { id: 'done', title: 'What we have done' },
+  { id: 'limitations', title: 'Known limitations' },
+  { id: 'testing', title: 'How we check' },
+  { id: 'documents', title: 'Documents and third-party content' },
+  { id: 'feedback', title: 'Feedback and contact' },
+];
+---
+<Base title="Accessibility" description={description}>
+  <Hero variant="page" eyebrow="Accessibility" title="Accessibility statement" lead="This site is meant to work for everyone who needs to check our capability, fleet or compliance, whatever device or assistive technology they use.">
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Accessibility' }]} />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container legal">
+      <nav class="toc reveal" aria-labelledby="toc-h">
+        <div class="section-head__rule" aria-hidden="true"></div>
+        <h2 class="toc__h" id="toc-h">On this page</h2>
+        <ol>{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ol>
+      </nav>
+
+      <article class="prose legal__body">
+        <p class="notice" role="note"><strong>Draft for legal review.</strong> This statement describes how the site was built and will be completed with the findings of an accessibility audit before launch. Conformance claims should not be published until that audit is done.</p>
+
+        <h2 id="commitment">Our target</h2>
+        <p>{company.legalName} aims for this website to meet the <a href="https://www.w3.org/TR/WCAG22/" rel="noopener" target="_blank">Web Content Accessibility Guidelines (WCAG) 2.2<span class="visually-hidden"> (opens in a new tab)</span></a> at level AA. That is the standard most carrier, utility and government procurement processes reference, and it is the level the site was designed and built to.</p>
+        <p>We will state the site's conformance status here once an audit has confirmed it. Until then, treat the list below as what was built in, not as a certified result.</p>
+
+        <h2 id="done">What we have done</h2>
+        <ul>
+          <li><strong>Structure.</strong> Every page has one main heading, headings in order, landmark regions for header, navigation, main content and footer, and a skip link to the content.</li>
+          <li><strong>Keyboard.</strong> Everything can be reached and operated from the keyboard. Focus is always visible. Menus open on click or Enter and close with Escape.</li>
+          <li><strong>Target size.</strong> Buttons, links and form controls meet or exceed the WCAG 2.2 minimum target size, so they are usable by touch and by people with limited fine motor control.</li>
+          <li><strong>Colour and contrast.</strong> Text and interface colours are checked against the AA contrast minimum on both the light page and the dark bands. Colour is never the only way information is shown.</li>
+          <li><strong>Images.</strong> Every photograph has alternative text written for someone who cannot see it. No text is carried in images. Decorative images are hidden from assistive technology.</li>
+          <li><strong>Forms.</strong> Every field has a visible label, required fields are marked in text, errors are described in text, and there are no time limits on completing a form.</li>
+          <li><strong>Tables.</strong> Fleet and register tables have captions and header cells so screen readers announce the context of each figure.</li>
+          <li><strong>Motion.</strong> Nothing autoplays, and animation and smooth scrolling are switched off for people who have asked their system to reduce motion.</li>
+          <li><strong>Zoom and reflow.</strong> Pages work at high browser zoom and on small screens without horizontal scrolling or loss of content.</li>
+          <li><strong>Language and wording.</strong> The page language is declared as Australian English. Copy uses plain words, short sentences and metric units with a space, so it reads well aloud and in translation.</li>
+          <li><strong>Consistency.</strong> Navigation, breadcrumbs and page layout are the same across the site, and the current page is marked in the navigation.</li>
+        </ul>
+
+        <h2 id="limitations">Known limitations</h2>
+        <p class="notice">Placeholder for the client and the launch audit: list any known issues here with the planned fix and date. Candidates to check: PDF documents such as the capability statement and manufacturer spec sheets may not be fully tagged; the anti-spam check on the enquiry form, if enabled, is supplied by Cloudflare; and map links open Google Maps, which we do not control.</p>
+
+        <h2 id="testing">How we check</h2>
+        <p>During the build, each page was checked with automated accessibility tooling, by keyboard only, and at high zoom on a small screen. A screen reader review and an independent audit against WCAG 2.2 AA are planned before launch, and this statement will be updated with their findings and any remaining issues.</p>
+        <p>We re-check pages when they change. If you find something we have missed, please tell us using the details below.</p>
+
+        <h2 id="documents">Documents and third-party content</h2>
+        <p>The capability statement is published as a web page so it can be read with assistive technology, and a PDF version is issued on request. Where a document you need is only available as a PDF or image, ask us and we will provide the content in another format, for example plain text or a web page.</p>
+        <p>Some content is provided by third parties, such as maps, the anti-spam check on the enquiry form and our social media pages. We choose providers that publish their own accessibility commitments, but we cannot guarantee their content.</p>
+
+        <h2 id="feedback">Feedback and contact</h2>
+        <p>If any part of this site is hard to use, or you need information in a different format, contact us and tell us the page and what happened. We will respond during business hours, {company.hours}, and fix what we can.</p>
+        <p>
+          Email <a href={`mailto:${company.email}`}>{company.email}</a> with "Accessibility" in the subject line<br />
+          Phone <a href={`tel:${company.phoneMain.tel}`}>{company.phoneMain.display}</a>
+        </p>
+        <p>If you are not satisfied with our response, you can make a complaint to the Australian Human Rights Commission at <a href="https://humanrights.gov.au/" rel="noopener" target="_blank">humanrights.gov.au<span class="visually-hidden"> (opens in a new tab)</span></a>.</p>
+
+        <p class="caption updated">Last updated: {currentYear} draft. The date will be set when the audit findings are added and the statement is approved.</p>
+      </article>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Found something on this site that is hard to use?"
+    text="Tell us the page and what happened, and we will fix what we can. If you need a document in another format, ask and we will provide it."
+    primary={{ label: 'Contact us', href: '/contact/' }}
+    secondary={{ label: 'Capability statement', href: '/capability-statement/' }}
+  />
+</Base>
+
+<style>
+  /* A legal document, set like one: a numbered contents column that stays with the reader,
+     and clauses separated by a rule rather than by white space alone. */
+  .legal { display: grid; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+  .legal > * { min-width: 0; }
+  @media (min-width: 900px) { .legal { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); } .toc { position: sticky; top: 1.5rem; } }
+
+  .toc .section-head__rule { margin-bottom: 1.25rem; }
+  .toc__h { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); margin: 0 0 0.5rem; }
+  .toc ol { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: clause; }
+  .toc li { margin: 0; counter-increment: clause; }
+  .toc a { display: flex; align-items: center; gap: 0.85rem; min-height: 44px; padding: 0.55rem 0; border-top: 1px solid var(--concrete); font-family: var(--font-display); font-size: var(--fs-dense); line-height: 1.3; color: var(--ink); text-decoration: none; }
+  .toc a::before { content: counter(clause, decimal-leading-zero); flex: 0 0 auto; font-size: var(--fs-eyebrow); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; color: var(--steel); }
+  .toc li:last-child a { border-bottom: 1px solid var(--concrete); }
+  .toc a:hover, .toc a:hover::before { color: var(--deep-green); }
+
+  /* Legal prose carries long URLs and email addresses; they wrap rather than overflow. */
+  .legal__body { overflow-wrap: anywhere; }
+  .legal__body h2 { scroll-margin-top: 1.5rem; font-size: var(--fs-h3); margin-top: clamp(2.5rem, 5vw, 3.75rem); padding-top: clamp(1.25rem, 2.5vw, 1.75rem); border-top: 1px solid var(--concrete); }
+  .legal__body h3 { margin-top: 1.9em; color: var(--ink); }
+  .legal__body > :first-child { margin-top: 0; }
+  .legal__body ul { margin-top: 1em; }
+  .updated { margin-top: clamp(2.5rem, 5vw, 3.5rem); padding-top: 1rem; border-top: 1px solid var(--concrete); }
+</style>

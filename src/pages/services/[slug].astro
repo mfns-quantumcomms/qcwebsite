@@ -1,0 +1,270 @@
+---
+/**
+ * One page per entry in the services collection. Scope, proof, related fleet and the body copy
+ * all come from the collection, so nothing numeric is typed in this template. The stat band
+ * above the related-fleet table is computed from the register entries themselves.
+ */
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { getImage, Image } from 'astro:assets';
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import FleetTable from '@components/FleetTable.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { photos, alts, type PhotoKey } from '@data/images';
+import { company } from '@data/company';
+import { fmtHeight } from '../../lib/facts';
+import { groupMeta, type ServiceGroup } from './_groups';
+
+export const getStaticPaths = (async () => {
+  const services = await getCollection('services');
+  return services.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}) satisfies GetStaticPaths;
+
+interface Props { entry: CollectionEntry<'services'> }
+const { entry } = Astro.props as Props;
+const d = entry.data;
+const { Content, headings } = await render(entry);
+/* Second level headings drive the contents rail beside the article. */
+const sections = headings.filter((h) => h.depth === 2);
+const meta = groupMeta[d.group];
+
+/** Photo and alt text from the curated library; the alt lives with the image, not the entry. */
+const photoKey: PhotoKey = d.image && d.image in photos ? (d.image as PhotoKey) : 'towerErection';
+const image = photos[photoKey];
+const imageAlt = alts[photoKey];
+const og = await getImage({ src: image, width: 1200, height: 630, fit: 'cover', format: 'jpg' });
+
+/** The feature band's photograph, one per group and never the same frame as the hero. */
+const bandPhotoByGroup: Record<ServiceGroup, PhotoKey> = {
+  Telecommunications: 'towerErection',
+  Workshop: 'civilAnchorCage',
+  Hire: 'fleetLineupSunset',
+};
+const bandKey: PhotoKey = bandPhotoByGroup[d.group] === photoKey ? 'monopoleSky' : bandPhotoByGroup[d.group];
+
+/** Related units, resolved against the register so a stale id cannot render an empty row. */
+const fleet = await getCollection('fleet');
+const related = d.relatedFleet
+  .map((id) => fleet.find((u) => u.id === id))
+  .filter((u): u is CollectionEntry<'fleet'> => Boolean(u))
+  .sort((a, b) => (b.data.workingHeight ?? 0) - (a.data.workingHeight ?? 0) || a.data.order - b.data.order);
+
+/**
+ * Headline figures for the related units. Every value is read from the register entries above;
+ * a unit that is not in service is named with its status so the figure is never read as available.
+ */
+const statusSuffix: Record<CollectionEntry<'fleet'>['data']['status'], string> = {
+  'in-service': '',
+  'on-order': ', on order',
+  'to-confirm': ', to be confirmed',
+};
+const tallest = related.filter((u) => u.data.workingHeight)[0] ?? null;
+const longest = related
+  .filter((u) => u.data.outreach)
+  .sort((a, b) => (b.data.outreach ?? 0) - (a.data.outreach ?? 0))[0] ?? null;
+const fleetStats: Array<{ n: string; text?: boolean; l: string }> = [
+  ...(tallest
+    ? [{ n: fmtHeight(tallest.data.workingHeight), l: `Greatest working height among these units, the ${tallest.data.shortName}${statusSuffix[tallest.data.status]}` }]
+    : []),
+  ...(longest
+    ? [{ n: fmtHeight(longest.data.outreach), l: `Greatest outreach among these units, the ${longest.data.shortName}${statusSuffix[longest.data.status]}` }]
+    : []),
+  { n: String(related.length), l: 'Units on the fleet register listed against this service' },
+];
+
+const others = (await getCollection('services')).filter((s) => s.id !== entry.id).sort((a, b) => a.data.order - b.data.order);
+/* The fleet section above is conditional, so the closing section takes whichever ground keeps
+   the page alternating rather than stacking two Mist slabs. */
+const othersGround = related.length > 0 ? 'section--mist' : 'section--white';
+const otherPhoto = (key?: string): PhotoKey => (key && key in photos ? (key as PhotoKey) : 'towerErection');
+
+/** Meta description between 120 and 160 characters, built from the entry summary. */
+function metaDescription(summary: string): string {
+  const base = summary.trim();
+  const suffix = ` ${company.tradingName}, Australian telecommunications contractor.`;
+  let text = base.length >= 120 ? base : base + suffix;
+  if (text.length > 160) text = text.slice(0, 157).replace(/\s+\S*$/, '').replace(/[,;:.]$/, '') + '…';
+  return text;
+}
+const description = metaDescription(d.summary);
+
+const path = `/services/${entry.id}/`;
+const url = new URL(path, Astro.site).href;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  '@id': `${url}#service`,
+  name: d.title,
+  serviceType: d.serviceType,
+  description: d.summary,
+  url,
+  image: new URL(og.src, Astro.site).href,
+  category: d.group,
+  provider: { '@id': `${company.siteUrl}/#organization` },
+  areaServed: { '@type': 'Country', name: 'Australia' },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: `${d.title} scope`,
+    itemListElement: d.scope.map((item) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: item } })),
+  },
+};
+---
+<Base title={d.title} description={description} ogImage={og.src} jsonLd={jsonLd}>
+  <Hero variant="photo" eyebrow={meta.eyebrow} title={d.title} lead={d.summary} image={image} imageAlt={imageAlt}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Services', href: '/services/' }, { label: d.navLabel }]} />
+    <div class="btn-row">
+      <a class="btn btn--primary" href="/contact/">Send an enquiry</a>
+      <a class="btn btn--secondary" href="/capability-statement/">Capability statement</a>
+    </div>
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Scope</p>
+        <h2>What we deliver</h2>
+      </div>
+      <ul class="scope__list reveal">
+        {d.scope.map((item) => <li>{item}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  {d.proof.length > 0 && (
+    <section class="section section--dark feature">
+      <div class="feature__bg" aria-hidden="true">
+        <Image src={photos[bandKey]} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+      </div>
+      <div class="container feature__inner">
+        <div class="feature__text reveal">
+          <div class="section-head__rule"></div>
+          <p class="eyebrow">What you can verify</p>
+          <h2>Where these claims are backed up</h2>
+          <ul class="proof__list">
+            {d.proof.map((item) => <li>{item}</li>)}
+          </ul>
+          <p class="feature__note">Certificates, training records and the prequalification pack are on the <a href="/compliance/">compliance page</a>.</p>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="article">
+        <div class="prose body reveal">
+          <Content />
+        </div>
+        <aside class="article__rail reveal" aria-label="On this page and next steps">
+          {sections.length > 1 && (
+            <nav class="card" aria-labelledby="onpage-h">
+              <h3 id="onpage-h">On this page</h3>
+              <ul>
+                {sections.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}
+              </ul>
+            </nav>
+          )}
+          <div class="card">
+            <h3>Scoping this work?</h3>
+            <p class="text-steel">Send the design pack or the site details and we will price it, with the safety documents your programme needs.</p>
+            <a class="arrow-link" href="/contact/">Contact a depot</a>
+            <a class="arrow-link" href="/capability-statement/">Capability statement</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {related.length > 0 && (
+    <section class="section section--white">
+      <div class="container">
+        <div class="section-head section-head--wide reveal">
+          <div class="section-head__rule"></div>
+          <p class="eyebrow">Fleet</p>
+          <h2>{meta.fleetHeading}</h2>
+          <p class="lead">{meta.fleetIntro}</p>
+        </div>
+        <ul class="statband reveal" aria-label={`Register figures for units related to ${d.title}`}>
+          {fleetStats.map((s) => (
+            <li>
+              <span class:list={['statband__n', { 'statband__n--text': s.text }]}>{s.n}</span>
+              <span class="statband__l">{s.l}</span>
+            </li>
+          ))}
+        </ul>
+        <div class="reg reveal">
+          <h3 class="reg__cap" id="fleet-caption">Fleet units related to {d.title}</h3>
+          <p class="reg__hint" id="fleet-hint">Seven columns. On a narrow screen, scroll the table sideways to reach chassis and status.</p>
+          <div class="reg__scroll" tabindex="0" role="region" aria-labelledby="fleet-caption" aria-describedby="fleet-hint">
+            <FleetTable units={related} caption={`Fleet units related to ${d.title}`} showClass scrollable={false} />
+          </div>
+          <p class="mt"><a class="arrow-link" href="/fleet/">Full fleet register</a></p>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class:list={['section', othersGround]}>
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Services</p>
+        <h2>Other services</h2>
+      </div>
+      <div class="grid grid--4 reveal">
+        {others.map((s) => (
+          <a class="media-card" href={`/services/${s.id}/`}>
+            <div class="media-card__media">
+              <Image src={photos[otherPhoto(s.data.image)]} alt={alts[otherPhoto(s.data.image)]} widths={[320, 640]} sizes="(min-width: 1000px) 25vw, (min-width: 640px) 50vw, 100vw" />
+            </div>
+            <div class="media-card__body">
+              <span class="media-card__label">{s.data.group}</span>
+              <h3 class="media-card__title">{s.data.title}</h3>
+              <p>{s.data.summary}</p>
+              <span class="arrow-link">See {s.data.navLabel}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+      <p class="caption mt">All services on the <a href="/services/">services hub</a>. Platforms, plant and generators on the <a href="/fleet/">fleet register</a>.</p>
+    </div>
+  </section>
+
+  <CtaBand heading={meta.cta.heading} text={meta.cta.text} primary={meta.cta.primary} secondary={meta.cta.secondary} />
+</Base>
+
+<style>
+  /* Scope: the list is the section, so it runs two columns wide with real air between rows. */
+  .scope__list { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem 3rem; max-width: none; }
+  .scope__list > * { min-width: 0; }
+  @media (min-width: 780px) { .scope__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .scope__list li { position: relative; padding-left: 1.6rem; margin: 0; }
+  .scope__list li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 0.55rem; height: 0.55rem; border-radius: 2px; background: var(--deep-green); }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 62ch; }
+  .feature__note { color: var(--on-ink-quiet); font-size: var(--fs-dense); margin: 0; }
+  .proof__list { margin: 1.25rem 0; padding-left: 1.2rem; max-width: none; }
+  .proof__list li { margin-bottom: 0.6rem; }
+  .proof__list li::marker { color: var(--quantum-green); }
+
+  .body { max-width: 76ch; overflow-wrap: anywhere; }
+  .mt { margin-top: 1.5rem; }
+  .reg { margin-top: clamp(2rem, 4vw, 3rem); }
+  /* Related-fleet table: the page owns the scroll container so it can be named and focused. */
+  .reg__cap { font-size: var(--fs-h4); margin: 0 0 0.25rem; }
+  .reg__hint { font-size: var(--fs-caption); color: var(--steel); margin: 0 0 0.6rem; max-width: var(--measure); }
+  .reg__scroll { overflow-x: auto; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+  .reg__scroll :global(.table-wrap) { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .reg__scroll :global(table) { min-width: 44rem; }
+  .reg__scroll :global(.chip) { white-space: normal; }
+</style>

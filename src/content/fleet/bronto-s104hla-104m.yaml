@@ -1,0 +1,13 @@
+name: Bronto S104HLA on Tatra T158 16x16
+shortName: 104 m Bronto S104HLA
+unitClass: truck-mounted
+oem: Bronto Skylift
+model: S104HLA
+chassis: Tatra T158 16x16
+workingHeight: 104
+status: on-order
+homeDepots: [craigieburn]
+idealFor: [Broadcast masts and tall lattice towers, Wind turbine access, Stadium and high-rise facade work, Powerline crossings]
+order: 1
+meta: { verified: false, source: "Trade press June 2025 (Access Briefing, Vertikal.net, Cranes & Lifting) and Feb 2026 (Prime Mover): ordered, delivery expected 2026. Client to confirm delivery and commissioning date", lastVerified: null }
+notes: Reported as the first 104 m aerial platform in Australia. Outreach, SWL and transport dimensions to be published from the OEM data sheet once delivered.

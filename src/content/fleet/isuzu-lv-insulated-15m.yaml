@@ -1,0 +1,16 @@
+name: LV insulated 15 m on Isuzu FTS 800 4x4
+shortName: 15 m LV insulated
+unitClass: insulated
+chassis: 2015 Isuzu FTS 800 4x4
+workingHeight: 15
+swlKg: "250"
+insulated: LV
+maxWindMs: 12.5
+gvwT: 20.5
+licence: MR
+fourWd: true
+status: in-service
+homeDepots: [craigieburn]
+idealFor: [Work near low-voltage lines, Distribution pole and streetlight works, Fibre on power and tram poles]
+order: 8
+meta: { verified: false, source: "Fleet Portfolio 2019 spec sheet. Capability Statement also lists a 16 m insulated unit and HV insulated availability. Client to confirm", lastVerified: null }

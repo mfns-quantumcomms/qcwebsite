@@ -1,0 +1,106 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { company } from '@data/company';
+
+const description = 'The page you asked for is not on the Quantum Comms website. Find services, the fleet register, depot locations and contact details from here.';
+const mailto = `mailto:${company.email}?subject=${encodeURIComponent('Broken link on the Quantum Comms website')}`;
+const doors = [
+  { href: '/services/', title: 'Services', text: 'Comms and rigging, civil works, steel fabrication, thermal coating and EWP servicing.' },
+  { href: '/fleet/', title: 'Fleet register', text: 'Every truck-mounted and insulated unit with its working height, outreach and jacking specs.' },
+  { href: '/locations/', title: 'Locations', text: 'Confirmed depots and fleet yards, with the states we cover.' },
+  { href: '/contact/', title: 'Contact', text: 'Phone, email, hours, document requests and the enquiry form.' },
+];
+const more = [
+  { href: '/capability-statement/', label: 'Capability statement' },
+  { href: '/compliance/', label: 'Safety and compliance' },
+  { href: '/fleet/how-hire-works/', label: 'How hire works' },
+  { href: '/hire-terms/', label: 'Hire terms' },
+  { href: '/projects/', label: 'Projects and programmes' },
+  { href: '/about/', label: 'About the company' },
+  { href: '/careers/', label: 'Careers' },
+  { href: '/about/news/', label: 'News' },
+];
+---
+<Base title="Page not found" description={description} noindex={true}>
+  <Hero variant="page" eyebrow="Error 404" title="That page is not here" lead="The address may be mistyped, or the page moved when the site was rebuilt. The links below cover most of what people come here for.">
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Page not found' }]} />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="grid grid--4 reveal">
+        {doors.map((d) => (
+          <a class="door" href={d.href}>
+            <h2 class="door__h">{d.title}</h2>
+            <p>{d.text}</p>
+            <span class="arrow-link">Go to {d.title.toLowerCase()}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="split split--wide-text">
+        <div class="reveal">
+          <div class="section-head__rule" aria-hidden="true"></div>
+          <h2>Other places to look</h2>
+          <ul class="more">
+            {more.map((m) => (
+              <li>
+                <a href={m.href}>
+                  <span>{m.label}</span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <aside class="card reveal" aria-labelledby="fix-h">
+          <h3 id="fix-h">Followed a link that should work?</h3>
+          <p>Older addresses from the previous website redirect automatically. If one did not, tell us where you came from and we will fix it.</p>
+          <p><a class="arrow-link" href={mailto}>Report a broken link</a></p>
+          <p class="caption">Or call <a href={`tel:${company.phoneMain.tel}`}>{company.phoneMain.display}</a>, {company.hours}.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Still cannot find what you came for?"
+    text="Tell us what you were looking for and we will point you at it, or send the capability statement, which carries the services, fleet register and compliance summary in one page."
+    primary={{ label: 'Contact a depot', href: '/contact/' }}
+    secondary={{ label: 'Capability statement', href: '/capability-statement/' }}
+  />
+</Base>
+
+<style>
+  /* The four doors take the media card's body treatment without a photograph: a 2 px rule,
+     a tight title and one arrow. No boxes, so the page does not read as a grid of dead ends. */
+  .door { display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; padding-top: 1.15rem; border-top: 2px solid var(--ink); text-decoration: none; color: inherit; }
+  .door__h { font-size: var(--fs-h4); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+  .door p { margin: 0; color: var(--graphite); }
+  .door .arrow-link { margin-top: auto; }
+  .door:hover .door__h { color: var(--deep-green); }
+  .door:hover .arrow-link::after { transform: translateX(4px); }
+
+  .section-head__rule { margin-bottom: 1.25rem; }
+
+  /* Each secondary link is its own row, so the list reads as an index rather than a paragraph. */
+  .more { list-style: none; padding: 0; margin: 1.5rem 0 0; max-width: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 0 clamp(1.5rem, 3vw, 2.5rem); }
+  .more li { margin: 0; min-width: 0; }
+  .more a { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 52px; padding: 0.5rem 0; border-top: 1px solid var(--concrete); font-family: var(--font-display); font-weight: 500; color: var(--ink); text-decoration: none; }
+  .more a:hover { color: var(--deep-green); }
+  .more svg { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; color: var(--deep-green); transition: transform .25s ease; }
+  .more a:hover svg { transform: translateX(4px); }
+
+  .split > *, .grid > * { min-width: 0; }
+  .card p:last-child { margin-bottom: 0; }
+  /* The global "a link alone in a paragraph" rule sets a 24 px floor; this one is the card's
+     next step, so it keeps the full 44 px. */
+  .card .arrow-link { min-height: 44px; }
+</style>

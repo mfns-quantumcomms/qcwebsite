@@ -1,0 +1,15 @@
+name: 55 m platform on Mercedes-Benz Actros 4144
+shortName: 55 m (Actros)
+unitClass: truck-mounted
+oem: To be confirmed
+chassis: Mercedes-Benz Actros 4144 TJ 550
+workingHeight: 55
+gvwT: 35.5
+transport: { length: 11.8, width: 2.5, height: 4.313 }
+jacking: { normal: "5.5 × 6.5 m", narrow: "2.3 × 6.5 m" }
+licence: HR
+status: in-service
+homeDepots: [craigieburn]
+idealFor: [Tower and mast works to 55 m, Rooftop and facade access]
+order: 4
+meta: { verified: false, source: "Fleet Portfolio 2019 spec sheet. Platform OEM and SWL not stated; client to supply", lastVerified: null }

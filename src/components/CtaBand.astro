@@ -1,0 +1,56 @@
+---
+/** Closing band: the two actions a procurement reader or existing client actually needs.
+ *  It sits on Ink, so the Quantum Green rule is the one accent it carries. */
+interface Props {
+  heading?: string;
+  text?: string;
+  primary?: { label: string; href: string };
+  secondary?: { label: string; href: string };
+  tone?: 'navy' | 'charcoal';
+}
+const {
+  heading = 'Need our capability on file, or a depot on the phone?',
+  text = 'Download the current capability statement, or contact the depot nearest your site. Prequalification and tender packs are available on request.',
+  primary = { label: 'Capability statement', href: '/capability-statement/' },
+  secondary = { label: 'Contact a depot', href: '/contact/' },
+  tone = 'navy',
+} = Astro.props;
+---
+<section class={`cta-band section section--tight ${tone === 'navy' ? 'section--dark' : 'section--charcoal'}`}>
+  <div class="container band reveal">
+    <div class="band__text">
+      <div class="band__rule" aria-hidden="true"></div>
+      <h2 class="band__h">{heading}</h2>
+      <p class="band__p">{text}</p>
+    </div>
+    <div class="btn-row band__actions">
+      <a class="btn btn--primary" href={primary.href}>{primary.label}</a>
+      <a class="btn btn--secondary" href={secondary.href}>{secondary.label}</a>
+    </div>
+  </div>
+</section>
+<style>
+  /* A closing band earns more air than a normal tight section: it is the last thing on the page. */
+  .cta-band { padding-block: clamp(3rem, 5.5vw, 5.5rem); }
+
+  /* One row on a wide screen, stacked below about 900 px. The text block may shrink to
+     nothing, so a long heading wraps rather than pushing the buttons off the side. */
+  .band { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: clamp(1.75rem, 4vw, 3.5rem); }
+  .band > * { min-width: 0; }
+  .band__text { flex: 1 1 30rem; }
+  .band__actions { flex: 0 1 auto; }
+
+  /* The one Quantum Green mark in the band, the same 88 px rule the section heads use. */
+  .band__rule { width: 88px; height: 4px; background: var(--quantum-green); margin-bottom: 1.5rem; }
+
+  /* Between h3 and h2: a closing band should carry weight without competing with the page title. */
+  .band__h { font-size: clamp(1.75rem, 1.35rem + 1.5vw, 2.5rem); margin-bottom: 0.6rem; max-width: 22ch; text-wrap: balance; }
+  .band__p { margin: 0; max-width: 56ch; font-size: var(--fs-lead); color: var(--on-ink); }
+
+  /* On a narrow screen the actions sit under the text and each button takes its own line
+     rather than squeezing to two words a row. */
+  @media (max-width: 560px) {
+    .band__actions { width: 100%; }
+    .band__actions .btn { flex: 1 1 100%; }
+  }
+</style>

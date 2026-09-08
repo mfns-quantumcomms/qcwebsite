@@ -1,0 +1,55 @@
+---
+/**
+ * Proof strip. Renders only facts a procurement reader can check, never fleet counts.
+ * Items flagged unverified in the register render with a neutral wording and no number.
+ *
+ * Presented in the same language as the home page stat band: a large value, a hairline rule,
+ * a small label. No boxes. `text: true` marks a value that is words rather than a numeral, so
+ * it takes the smaller size and does not wrap into a wall.
+ */
+import { company, certifications, headlineFacts } from '@data/company';
+interface Props { tone?: 'light' | 'dark' }
+const { tone = 'light' } = Astro.props;
+const items = [
+  { k: 'Trading since', v: headlineFacts.tradingSince.value, note: `Formerly ${company.formerName}`, text: false },
+  { k: 'Management systems', v: certifications.map((c) => c.standard.split(':')[0].replace('ISO ', '')).join(' · '), note: 'ISO certified, see Compliance', text: true },
+  { k: 'Carrier inductions', v: 'Telstra · Optus · Vodafone · NBN', note: 'Plus Broadcast Australia and AusNet HV', text: true },
+  { k: 'Hire model', v: 'Wet or dry', note: 'Short or long term, operators inducted', text: true },
+];
+---
+<ul class={`proof proof--${tone}`} aria-label="Company facts">
+  {items.map((i) => (
+    <li>
+      <span class:list={['proof__v', { 'proof__v--text': i.text }]}>{i.v}</span>
+      <span class="proof__k">{i.k}</span>
+      <span class="proof__n">{i.note}</span>
+    </li>
+  ))}
+</ul>
+<style>
+  /* Same grid and rhythm as .statband, so a page that carries both reads as one system.
+     The items stretch to a common height and the label block is pushed to the bottom of each,
+     so the four hairlines sit on one line however tall a value happens to be. */
+  .proof { list-style: none; margin: 0; padding: 0; max-width: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: clamp(1.5rem, 3vw, 2.5rem); align-items: stretch; }
+  .proof li { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; overflow-wrap: break-word; }
+
+  .proof__v { display: block; padding-bottom: 0.7rem; font-family: var(--font-display); font-weight: 600; font-stretch: var(--wdth-display); font-size: clamp(2.4rem, 1.6rem + 3.2vw, 4rem); line-height: 1; letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums; }
+  /* Words, not a numeral: smaller and set to wrap rather than run off the track. */
+  .proof__v--text { font-size: clamp(1.35rem, 1.1rem + 1.1vw, 1.9rem); letter-spacing: -0.02em; line-height: 1.15; font-stretch: var(--wdth-normal); }
+
+  .proof__k { display: block; margin-top: auto; padding-top: 0.7rem; border-top: 1px solid var(--concrete); font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); }
+  .proof__n { display: block; margin-top: 0.3rem; font-size: var(--fs-caption); color: var(--steel); }
+
+  .proof--dark .proof__v { color: var(--white); }
+  .proof--dark .proof__k { color: var(--on-ink-quiet); border-top-color: var(--rule-on-ink); }
+  .proof--dark .proof__n { color: var(--on-ink-quiet); }
+
+  @media print {
+    .proof { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem 1.5rem; }
+    .proof li { break-inside: avoid; }
+    .proof__v { font-size: 14pt; }
+    .proof__v--text { font-size: 12pt; }
+    .proof__k { border-top-color: #999; }
+    .proof--dark .proof__v, .proof--dark .proof__k, .proof--dark .proof__n { color: #000; }
+  }
+</style>

@@ -1,0 +1,12 @@
+name: Middle Beach depot
+role: Depot
+state: SA
+street: 220 Applebee Road
+suburb: Middle Beach
+postcode: "5501"
+timezone: Australia/Adelaide
+confirmed: false
+geo: { lat: -34.633945, lng: 138.472865 }
+capabilities: [Truck-mounted EWP fleet]
+order: 5
+meta: { verified: false, source: "Site footer only; not in Capability Statement or LinkedIn. Client to confirm", lastVerified: null }

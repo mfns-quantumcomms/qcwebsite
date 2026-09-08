@@ -1,0 +1,16 @@
+name: Bylands workshop and fleet yard
+role: Workshop and fleet yard
+state: VIC
+street: 1040 Northern Highway
+suburb: Bylands
+postcode: "3762"
+phone: { display: "03 9219 0948", tel: "+61392190948" }
+email: admin@quantumcomms.com.au
+hours: Monday to Friday, 7:00 am to 4:00 pm
+timezone: Australia/Melbourne
+confirmed: true
+geo: { lat: -37.360695, lng: 144.963487 }
+mapZoom: 12
+capabilities: [Steel fabrication, Thermal coating, EWP service and maintenance, Fleet yard]
+order: 2
+meta: { verified: false, source: "Site footer (2022). Client to confirm phone and hours", lastVerified: null }

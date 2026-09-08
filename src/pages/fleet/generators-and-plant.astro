@@ -1,0 +1,175 @@
+---
+/**
+ * Generators and plant. Lists come from company.plant; the generator range is a placeholder
+ * until the client supplies it from the fleet register. Nothing numeric is typed here.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { photos, alts } from '@data/images';
+import { plant } from '@data/company';
+
+const description =
+  'Generators, excavators, augers, crane trucks, winches and telecommunications test instruments from Quantum Comms, used on our sites and available on dry hire.';
+
+/**
+ * Register strings occasionally carry a hyphenated numeric range (for example a frequency band).
+ * House style spells a range with the word "to", so ranges are rewritten on the way to the page.
+ * The value itself still comes from the register; only its punctuation changes.
+ */
+const spellRanges = (text: string) => text.replace(/(\d)\s*[-\u2013\u2014]\s*(\d)/g, '$1 to $2');
+---
+<Base title="Generators and plant" description={description}>
+  <Hero
+    variant="photo"
+    eyebrow="Fleet and hire"
+    title="Generators and plant"
+    lead="The earthmoving plant, trucks, rigging gear and test instruments we run on our own telecommunications sites, available to hire when they are not on one of ours."
+    image={photos.generatorFenced}
+    imageAlt={alts.generatorFenced}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Fleet', href: '/fleet/' }, { label: 'Generators and plant' }]} />
+    <div class="btn-row">
+      <a class="btn btn--primary" href="/fleet/how-hire-works/#enquiry">Enquire about plant hire</a>
+      <a class="btn btn--secondary" href="/services/civil-works/">Civil works service</a>
+    </div>
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Generators</p>
+        <h2>Site power</h2>
+      </div>
+      <div class="split split--wide-text reveal">
+        <div>
+          <p>Diesel generators for temporary site power, greenfield builds before mains connection, and backup during equipment swaps. Units are supplied with a current service record and a prestart.</p>
+          <ul>
+            {plant.power.map((item) => <li>{spellRanges(item)}</li>)}
+          </ul>
+          <p class="notice">Placeholder for the client: the generator range, in kVA, and the number of units are to be confirmed from the fleet register before launch. Fuel cell sizes and enclosures to be confirmed at the same time.</p>
+        </div>
+        <figure class="figure figure--ratio">
+          <Image src={photos.generator25} alt={alts.generator25} widths={[500, 900, 1200]} sizes="(min-width: 860px) 45vw, 100vw" />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Plant</p>
+        <h2>Earthmoving, trucks and rigging plant</h2>
+        <p class="lead">Listed as in our capability statement. This is the plant our civil and rigging crews use for foundations, access tracks, trenching, pole and tower erection.</p>
+      </div>
+      <div class="grid grid--3 reveal">
+        <div class="card">
+          <h3>Earthmoving and drilling</h3>
+          <ul class="card-list">
+            {plant.earthmoving.map((item) => <li>{spellRanges(item)}</li>)}
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Trucks</h3>
+          <ul class="card-list">
+            {plant.trucks.map((item) => <li>{spellRanges(item)}</li>)}
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Rigging</h3>
+          <ul class="card-list">
+            {plant.rigging.map((item) => <li>{spellRanges(item)}</li>)}
+          </ul>
+          <p class="caption">Gin poles allow tower erection where a crane cannot access the site. See <a href="/services/comms-and-rigging/">comms and rigging</a>.</p>
+        </div>
+      </div>
+      <div class="grid grid--2 photos reveal">
+        <figure class="figure figure--wide">
+          <Image src={photos.augerLarge} alt={alts.augerLarge} widths={[500, 900, 1200]} sizes="(min-width: 700px) 50vw, 100vw" />
+        </figure>
+        <figure class="figure figure--wide">
+          <Image src={photos.excavatorContainer} alt={alts.excavatorContainer} widths={[500, 900, 1200]} sizes="(min-width: 700px) 50vw, 100vw" />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.headframe} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Instruments</p>
+        <h2>Test and commissioning instruments</h2>
+        <p class="lead">The instruments our technicians use for testing and handover, available on daily dry hire to inducted technicians.</p>
+        <ul class="instruments">
+          {plant.instruments.map((item) => <li>{spellRanges(item)}</li>)}
+        </ul>
+        <p class="caption mb-0">Where an instrument needs current calibration for your handover pack, ask for the calibration certificate with your booking.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Dry hire</p>
+        <h2>How plant and instrument hire works</h2>
+      </div>
+      <div class="grid grid--3 reveal">
+        <div class="card">
+          <h3>Availability</h3>
+          <p>All plant is used in-house on our own projects and hired out between them. Availability depends on our programme, so give the depot as much notice as you can.</p>
+        </div>
+        <div class="card">
+          <h3>Rates and terms</h3>
+          <p>Plant is dry hired by the day, priced on application. Instruments have daily rates. Delivery, fuel, damage and return conditions are set out in the <a href="/hire-terms/">hire terms</a>.</p>
+        </div>
+        <div class="card">
+          <h3>Operators</h3>
+          <p>Dry hire means your operator, licensed for the plant class. If you need an operator, a civil crew or a technician with the instrument, ask for a <a href="/services/civil-works/">works quote</a> instead.</p>
+        </div>
+      </div>
+      <p class="caption source">Plant list source: {plant.source}.</p>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need plant or an instrument on site?"
+    text="Tell the depot what you need, where and for how long. We will confirm availability and a rate from the current rate card."
+    primary={{ label: 'Enquire about plant hire', href: '/fleet/how-hire-works/#enquiry' }}
+    secondary={{ label: 'Hire terms', href: '/hire-terms/' }}
+  />
+</Base>
+
+<style>
+  .card-list { margin: 0; padding-left: 1.1rem; }
+  .card-list li { margin-bottom: 0.3em; }
+  .split > * { min-width: 0; }
+  .photos { margin-top: clamp(1.5rem, 3vw, 2.5rem); }
+  .photos > * { min-width: 0; }
+  .source { margin-top: 1.5rem; }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 62ch; }
+  /* The instrument list is short lines, so it runs two columns where the row allows it. */
+  .instruments { list-style: none; padding: 0; margin: 1.25rem 0 1.5rem; display: grid; gap: 0.7rem 3rem; max-width: none; }
+  .instruments > * { min-width: 0; }
+  @media (min-width: 700px) { .instruments { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .instruments li { position: relative; padding-left: 1.5rem; margin: 0; }
+  .instruments li::before { content: ''; position: absolute; left: 0; top: 0.58em; width: 0.5rem; height: 0.5rem; border-radius: 2px; background: var(--quantum-green); }
+</style>

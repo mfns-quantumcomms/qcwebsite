@@ -1,0 +1,135 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { company, certifications } from '@data/company';
+import { fleetAll } from '../../lib/facts';
+
+const description = 'Index of Quantum Comms documents: capability statement, ISO certificates, insurance certificates, fleet spec sheets and hire terms, with how to request each.';
+const units = await fleetAll();
+const isoStandards = certifications.map((c) => c.standard).join(', ');
+
+type Availability = 'online' | 'request' | 'request-project';
+const availability: Record<Availability, { text: string; cls: string }> = {
+  online: { text: 'Online now', cls: 'chip--green' },
+  request: { text: 'On request', cls: '' },
+  'request-project': { text: 'On request, per project', cls: 'chip--warn' },
+};
+const statusLabel: Record<string, { text: string; cls: string }> = {
+  'in-service': { text: 'In service', cls: 'chip--green' },
+  'on-order': { text: 'On order', cls: 'chip--warn' },
+  'to-confirm': { text: 'To confirm', cls: '' },
+};
+
+const docs: { name: string; format: string; status: Availability; note: string; href: string; label: string }[] = [
+  { name: 'Capability statement', format: 'Web page; PDF on request', status: 'online', note: 'Generated from the same registers as this site. The PDF is issued at launch and on request.', href: '/capability-statement/', label: 'Read online' },
+  { name: 'Prequalification and tender pack', format: 'PDF pack', status: 'request-project', note: 'Assembled for your panel or tender from the documents below plus policies and procedures.', href: '/compliance/', label: 'What it contains' },
+  { name: 'ISO certificates', format: 'PDF', status: 'request', note: `${isoStandards}. Issued with scope and expiry from our JAS-ANZ accredited registrar.`, href: '/compliance/', label: 'Management systems' },
+  { name: 'Insurance certificates of currency', format: 'PDF', status: 'request-project', note: 'Issued for a named project, panel or purchase order so the insured party and limits are correct.', href: '/compliance/', label: 'Insurances' },
+  { name: 'Training matrix and inductions', format: 'Web page', status: 'online', note: 'Minimum training for every field employee, specialist inductions and the vehicle safety kit.', href: '/compliance/', label: 'See the matrix' },
+  { name: 'Fleet spec sheets', format: 'Web page per unit; manufacturer PDF on request', status: 'online', note: 'Working height, outreach, safe working load, chassis, transport dimensions and jacking footprint.', href: '/fleet/', label: 'Fleet register' },
+  { name: 'Hire rate sheet', format: 'PDF', status: 'request-project', note: 'Issued with a quote for a named site and dates. Rates are not published on the site.', href: '/fleet/how-hire-works/', label: 'How hire works' },
+  { name: 'Hire terms', format: 'Web page', status: 'online', note: 'Standard EWP and plant hire conditions. The signed hire agreement prevails.', href: '/hire-terms/', label: 'Read the terms' },
+  { name: 'SWMS and safety pack samples', format: 'PDF', status: 'request', note: 'Sample safe work method statements and the site safety pack carried in every team leader vehicle.', href: '/compliance/', label: 'Safety systems' },
+];
+---
+<Base title="Documents" description={description} noindex={true}>
+  <Hero variant="page" eyebrow="Documents" title="Document index" lead="Everything a procurement or HSEQ reviewer usually asks for, where it lives, and how to get the ones we issue on request.">
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Documents' }]} />
+    <div class="btn-row hero__actions">
+      <a class="btn btn--primary" href="/contact/#enquiry">Request documents</a>
+      <a class="btn btn--secondary" href="/compliance/">Compliance page</a>
+    </div>
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container">
+      <p class="notice reveal"><strong>No files are hosted on this page yet.</strong> Until the document library is uploaded, every PDF is issued by email on request. Use the enquiry form and name the documents you need, or email <a href={`mailto:${company.email}`}>{company.email}</a>.</p>
+      <div class="section-head section-head--wide docs__head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Index</p>
+        <h2 id="docs-caption">Documents, their format, availability and where to find them</h2>
+        <p class="lead" id="docs-hint">Four columns. On a narrow screen, scroll the table sideways to reach availability and the link.</p>
+      </div>
+      <div class="table-wrap docs reveal" tabindex="0" role="region" aria-labelledby="docs-caption" aria-describedby="docs-hint">
+        <table>
+          <caption class="visually-hidden">Documents, their format, availability and where to find them</caption>
+          <thead>
+            <tr>
+              <th scope="col">Document</th>
+              <th scope="col">Format</th>
+              <th scope="col">Availability</th>
+              <th scope="col">Where</th>
+            </tr>
+          </thead>
+          <tbody>
+            {docs.map((d) => (
+              <tr>
+                <th scope="row">{d.name}<br /><span class="caption">{d.note}</span></th>
+                <td>{d.format}</td>
+                <td><span class={`chip ${availability[d.status].cls}`}>{availability[d.status].text}</span></td>
+                <td><a href={d.href}>{d.label}</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Fleet</p>
+        <h2>Spec sheets by unit</h2>
+        <p class="lead">Each fleet page carries the unit's specification. Manufacturer PDFs are sent on request for units marked in service.</p>
+      </div>
+      <ul class="units reveal">
+        {units.map((u) => (
+          <li class="units__item">
+            <a class="units__link" href={`/fleet/${u.id}/`}>
+              <span class="units__name">{u.data.name}</span>
+              <span class={`chip ${statusLabel[u.data.status].cls}`}>{statusLabel[u.data.status].text}</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="btn-row reveal">
+        <a class="btn btn--secondary" href="/fleet/">Full fleet register</a>
+        <a class="btn btn--ghost" href="/contact/">Back to contact</a>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need a document we issue on request?"
+    text="Name the documents, the panel or project they are for, and the format your portal accepts. Certificates of currency are issued per request so the dates on them are current."
+    primary={{ label: 'Request documents', href: '/contact/#enquiry' }}
+    secondary={{ label: 'Compliance page', href: '/compliance/' }}
+  />
+</Base>
+
+<style>
+  .hero__actions { margin-top: 1.75rem; }
+  .docs__head { margin-top: clamp(2rem, 4vw, 3rem); }
+  .docs { min-width: 0; }
+  .docs table { min-width: 34rem; }
+  .docs .chip { white-space: normal; }
+  .docs th[scope="row"] { font-family: var(--font-display); font-size: var(--fs-dense); letter-spacing: 0; text-transform: none; color: var(--ink); background: transparent; font-weight: 600; }
+  .docs th[scope="row"] .caption { font-weight: 400; font-family: var(--font-body); display: block; margin-top: 0.25rem; }
+
+  /* One ruled row per unit, name left, status and arrow right. */
+  .units { list-style: none; padding: 0; margin: 0 0 clamp(1.75rem, 4vw, 2.5rem); display: grid; gap: 0; max-width: none; }
+  .units__item { margin: 0; min-width: 0; }
+  .units__link { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.9rem 0; border-top: 1px solid var(--concrete); text-decoration: none; color: inherit; min-width: 0; min-height: 44px; }
+  .units__item:first-child .units__link { border-top: 2px solid var(--ink); }
+  .units__item:last-child .units__link { border-bottom: 1px solid var(--concrete); }
+  .units__name { font-family: var(--font-display); font-weight: 600; color: var(--ink); flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+  .units__link .chip { flex: 0 0 auto; white-space: normal; }
+  .units__link svg { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; color: var(--deep-green); transition: transform .25s ease; }
+  .units__link:hover .units__name { color: var(--deep-green); }
+  .units__link:hover svg { transform: translateX(4px); }
+</style>

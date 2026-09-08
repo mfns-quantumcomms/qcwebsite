@@ -1,0 +1,107 @@
+---
+/**
+ * One form for the whole site. Posts to /api/enquiry (Cloudflare Pages Function) and works without JS.
+ * Topic routes the enquiry; depot is a preference, not a routing key. Turnstile renders only if a site key is set.
+ * The page is static, so the error notice is filled in client-side from ?error= after a redirect.
+ */
+import { confirmedDepots } from '../lib/facts';
+import { company } from '@data/company';
+interface Props { topic?: string; depot?: string; source?: string; heading?: string }
+const { topic = '', depot = '', source = Astro.url.pathname, heading = 'Send an enquiry' } = Astro.props;
+const depots = await confirmedDepots();
+const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY as string | undefined;
+const topics = [
+  ['hire', 'EWP or plant hire'], ['works', 'Rigging or civil works'], ['prequal', 'Prequalification or tender pack'],
+  ['hseq', 'Safety, quality or compliance'], ['careers', 'Careers'], ['other', 'Something else'],
+];
+---
+<form class="enquiry" id="enquiry" method="post" action="/api/enquiry" novalidate data-enquiry>
+  <h2 class="enquiry__h">{heading}</h2>
+  <p class="notice" role="alert" hidden data-enquiry-error></p>
+  <p class="form-note">Fields marked with an asterisk (*) are required.</p>
+  <div class="grid grid--2">
+    <div class="field">
+      <label for="f-name">Name *</label>
+      <input id="f-name" name="name" type="text" required autocomplete="name" minlength="2" />
+    </div>
+    <div class="field">
+      <label for="f-org">Organisation</label>
+      <input id="f-org" name="organisation" type="text" autocomplete="organization" />
+    </div>
+    <div class="field">
+      <label for="f-email">Email *</label>
+      <input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email" />
+    </div>
+    <div class="field">
+      <label for="f-phone">Phone</label>
+      <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" />
+      <span class="hint">Helpful for hire and site enquiries.</span>
+    </div>
+    <div class="field">
+      <label for="f-topic">What is it about? *</label>
+      <select id="f-topic" name="topic" required>
+        {topics.map(([v, l]) => <option value={v} selected={v === topic}>{l}</option>)}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-depot">Nearest depot</label>
+      <select id="f-depot" name="depot">
+        <option value="" selected={!depot}>Not sure / national</option>
+        {depots.map((d) => <option value={d.id} selected={d.id === depot}>{d.data.suburb} {d.data.state}</option>)}
+      </select>
+    </div>
+  </div>
+  <div class="field">
+    <label for="f-message">Message *</label>
+    <textarea id="f-message" name="message" required minlength="10" placeholder="Site location, dates, working height or scope, and anything we should know."></textarea>
+  </div>
+  <div class="field field--check">
+    <input id="f-consent" name="consent" type="checkbox" value="yes" required />
+    <label for="f-consent">I agree to Quantum Comms handling my details to respond to this enquiry, as described in the <a href="/privacy/">privacy policy</a>. *</label>
+  </div>
+  <div class="hp" aria-hidden="true">
+    <label for="f-web">Leave this field empty</label>
+    <input id="f-web" name="company_website" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+  <input type="hidden" name="_source" value={source} />
+  <input type="hidden" name="_t" value="" data-started />
+  {turnstileKey && <div class="cf-turnstile" data-sitekey={turnstileKey} data-theme="light"></div>}
+  <div class="btn-row">
+    <button class="btn btn--primary" type="submit">Send enquiry</button>
+    <span class="form-note">We reply during business hours. Urgent? Call <a href={`tel:${company.phoneMain.tel}`}>{company.phoneMain.display}</a>.</span>
+  </div>
+</form>
+{turnstileKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+<script>
+  const messages: Record<string, string> = {
+    delivery: 'We could not deliver your message just now. Please call us instead.',
+    verification: 'The anti-spam check did not pass. Please try again.',
+  };
+  document.querySelectorAll<HTMLInputElement>('[data-started]').forEach((i) => { i.value = String(Date.now()); });
+  const err = new URLSearchParams(location.search).get('error');
+  const box = document.querySelector<HTMLElement>('[data-enquiry-error]');
+  if (err && box) {
+    const fields = err.split(',').filter((f) => !(f in messages));
+    box.textContent = messages[err] ?? `Please check these fields: ${fields.join(', ')}.`;
+    box.hidden = false;
+    fields.forEach((f) => document.querySelector<HTMLElement>(`[name="${f}"]`)?.setAttribute('aria-invalid', 'true'));
+  }
+</script>
+<style>
+  /* A panel, not a floating box: the 3 px Ink rule at the top does the work a shadow used to,
+     and the form sits flat on whichever ground the page gives it. */
+  .enquiry { background: var(--white); border: 1px solid var(--concrete); border-top: 3px solid var(--ink); border-radius: 0; padding: clamp(1.15rem, 3.5vw, 2.25rem); min-width: 0; max-width: 100%; }
+  .enquiry__h { font-size: var(--fs-h3); letter-spacing: -0.02em; margin: 0 0 0.85rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--concrete); }
+  .enquiry .notice { margin-bottom: 1.25rem; }
+  .enquiry .form-note { margin-bottom: 1.5rem; }
+  .enquiry .btn-row .form-note { margin-bottom: 0; }
+  .enquiry .field label { letter-spacing: -0.005em; }
+  .enquiry [aria-invalid="true"] { border-color: var(--danger); }
+  /* Every control fills its column; the select keeps its own arrow inside the box. */
+  .enquiry .field { min-width: 0; }
+  .enquiry select { max-width: 100%; }
+  /* The reassurance line sits beside the button on a wide form and under it at 320 px. */
+  .enquiry .btn-row { align-items: center; margin-top: 0.5rem; padding-top: 1.25rem; border-top: 1px solid var(--concrete); }
+  .enquiry .btn-row .form-note { flex: 1 1 20rem; min-width: 0; margin: 0; }
+  .enquiry .btn-row .btn { flex: 0 0 auto; }
+</style>

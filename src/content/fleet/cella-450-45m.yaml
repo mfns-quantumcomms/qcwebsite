@@ -1,0 +1,17 @@
+name: Cela 450 on Scania P94
+shortName: 45 m Cela 450
+unitClass: truck-mounted
+oem: Cela
+model: "450"
+chassis: Scania P94
+workingHeight: 45
+swlKg: "250"
+maxWindMs: 12.5
+gvwT: 18
+jacking: { normal: "6.2 × 5.85 m", narrow: "2.8 × 5.85 m", oneSide: "4.5 × 5.85 m" }
+licence: HR
+status: in-service
+homeDepots: [craigieburn]
+idealFor: [Monopole works to 45 m, Light-duty antenna and cabling, Tight-access sites]
+order: 7
+meta: { verified: false, source: "Fleet Portfolio 2019 spec sheet (listed as Cella 450 Liftel). Client to confirm", lastVerified: null }

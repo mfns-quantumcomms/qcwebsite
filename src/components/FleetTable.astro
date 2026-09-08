@@ -1,0 +1,73 @@
+---
+/** Register table for fleet units. Statuses are explicit; nothing is implied. */
+import type { CollectionEntry } from 'astro:content';
+import { fmtHeight, NOT_STATED } from '../lib/facts';
+/**
+ * `scrollable` false when the page already wraps the table in its own labelled, focusable
+ * scroll container (`.reg__scroll`, which sets this wrapper to overflow: visible). Without it
+ * the page renders two nested regions with the same name and two tab stops, the inner one on a
+ * box that no longer scrolls.
+ */
+interface Props { units: CollectionEntry<'fleet'>[]; caption?: string; showClass?: boolean; scrollable?: boolean }
+const { units, caption = 'Fleet register', showClass = false, scrollable = true } = Astro.props;
+const statusLabel: Record<string, { text: string; cls: string }> = {
+  'in-service': { text: 'In service', cls: 'chip--green' },
+  'on-order': { text: 'On order', cls: 'chip--warn' },
+  'to-confirm': { text: 'To confirm', cls: '' },
+};
+---
+<div
+  class="table-wrap fleet-wrap"
+  role={scrollable ? 'region' : undefined}
+  aria-label={scrollable ? caption : undefined}
+  tabindex={scrollable ? 0 : undefined}
+>
+  <table>
+    <caption class="visually-hidden">{caption}</caption>
+    <thead>
+      <tr>
+        <th scope="col">Unit</th>
+        {showClass && <th scope="col">Class</th>}
+        <th scope="col">Working height</th>
+        <th scope="col">Outreach</th>
+        <th scope="col">SWL</th>
+        <th scope="col">Chassis</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {units.map((u) => (
+        <tr data-class={u.data.unitClass}>
+          <th scope="row"><a href={`/fleet/${u.id}/`}>{u.data.shortName}</a></th>
+          {showClass && <td>{u.data.unitClass}</td>}
+          <td>{u.data.workingHeight ? fmtHeight(u.data.workingHeight) : <span class="na">{NOT_STATED}</span>}</td>
+          <td>{u.data.outreach ? fmtHeight(u.data.outreach) : <span class="na">{NOT_STATED}</span>}</td>
+          <td>{u.data.swlKg ? `${u.data.swlKg} kg` : <span class="na">{NOT_STATED}</span>}</td>
+          <td>{u.data.chassis ?? <span class="na">{NOT_STATED}</span>}</td>
+          <td><span class={`chip ${statusLabel[u.data.status].cls}`}>{statusLabel[u.data.status].text}</span></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+<style>
+  /* The register keeps seven columns readable; below about 44rem it scrolls inside its own box. */
+  .fleet-wrap table { min-width: 44rem; }
+  .fleet-wrap td, .fleet-wrap th { overflow-wrap: break-word; padding-block: 0.8rem; }
+  /* The head reads as a label strip: a solid rule under it separates it from the register. */
+  .fleet-wrap thead th { border-bottom: 2px solid var(--ink); padding-block: 0.7rem; }
+  .fleet-wrap tbody tr:hover { background: var(--mist); }
+  .fleet-wrap tbody tr:last-child td, .fleet-wrap tbody tr:last-child th { border-bottom: 0; }
+  /* The unit name is the row's identity, so it carries the weight and only colours on hover. */
+  .fleet-wrap th[scope="row"] { font-stretch: var(--wdth-normal); }
+  .fleet-wrap th[scope="row"] a { color: var(--ink); text-decoration: none; }
+  .fleet-wrap th[scope="row"] a:hover { color: var(--deep-green); text-decoration: underline; text-underline-offset: 0.15em; }
+  /* "Not stated" is a value, not a number: keep it quiet and left aligned with the rest. */
+  .na { color: var(--steel); font-variant-numeric: normal; }
+
+  @media print {
+    .fleet-wrap { overflow: visible !important; }
+    .fleet-wrap table { min-width: 0; font-size: 9.5pt; }
+    .fleet-wrap thead th { border-bottom-color: #999; }
+  }
+</style>

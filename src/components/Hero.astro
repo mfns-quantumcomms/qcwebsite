@@ -1,0 +1,135 @@
+---
+/**
+ * Page hero.
+ *
+ * 'home'  a full-bleed photograph with the statement over it, the pattern every peer in this
+ *         sector leads with. The scrim is one-sided so the photograph stays a photograph
+ *         rather than a grey wash, while the text side still clears 4.5:1.
+ * 'photo' a split for interior pages: statement left, one image right carrying the 45 degree cut.
+ * 'page'  text only, for legal and utility pages.
+ *
+ * The hero never prints a numeric claim of its own. Anything factual is passed in by the page
+ * from the register.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  variant?: 'page' | 'home' | 'photo';
+  image?: ImageMetadata;
+  imageAlt?: string;
+  align?: 'left' | 'centre';
+}
+const { eyebrow, title, lead, variant = 'page', image, imageAlt = '', align = 'left' } = Astro.props;
+---
+{variant === 'page' && (
+  <section class="hero hero--page">
+    <div class="container">
+      <slot name="breadcrumbs" />
+      {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+      <h1>{title}</h1>
+      {lead && <p class="lead">{lead}</p>}
+      <slot />
+    </div>
+  </section>
+)}
+{variant === 'photo' && (
+  <section class="hero hero--photo">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <slot name="breadcrumbs" />
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+        <h1>{title}</h1>
+        {lead && <p class="lead">{lead}</p>}
+        <slot />
+      </div>
+      {image && <figure class="figure hero__figure cut"><Image src={image} alt={imageAlt} widths={[480, 800, 1200]} sizes="(min-width: 900px) 50vw, 100vw" loading="eager" fetchpriority="high" /></figure>}
+    </div>
+  </section>
+)}
+{variant === 'home' && (
+  <section class:list={['hero', 'hero--home', 'section--dark', `hero--${align}`]}>
+    <div class="hero__bg" aria-hidden="true">
+      {image && <Image src={image} alt="" widths={[900, 1400, 2000]} sizes="100vw" loading="eager" fetchpriority="high" />}
+    </div>
+    <div class="container hero__home">
+      {eyebrow && <p class="eyebrow hero__eyebrow">{eyebrow}</p>}
+      <h1 class="hero__title">{title}</h1>
+      {lead && <p class="lead hero__lead">{lead}</p>}
+      <slot />
+    </div>
+    <slot name="foot" />
+  </section>
+)}
+
+<style>
+  .hero--page { padding: clamp(2.25rem, 5vw, 4rem) 0 clamp(1.75rem, 3vw, 3rem); background: var(--white); border-bottom: 1px solid var(--line); }
+  .hero--page h1 { max-width: 20ch; }
+  /* On a wide screen the statement and its lead sit side by side rather than stacking in a
+     narrow column with two thirds of the row empty beside them. */
+  @media (min-width: 900px) {
+    /* Rows are named explicitly rather than left to auto-placement, so the lead lands beside
+       the statement whether or not the page has an eyebrow or breadcrumbs. */
+    .hero--page .container { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); column-gap: clamp(2.5rem, 5vw, 5.5rem); align-items: start; }
+    .hero--page .container > * { grid-column: 1; }
+    .hero--page .container > :global(.crumbs) { grid-column: 1 / -1; grid-row: 1; }
+    .hero--page .container > .eyebrow { grid-column: 1; grid-row: 2; }
+    .hero--page .container > h1 { grid-column: 1; grid-row: 3; margin-bottom: 0; max-width: 17ch; }
+    .hero--page .container > .lead { grid-column: 2; grid-row: 3; margin: 0; max-width: 46ch; align-self: start; }
+    /* A hero with no lead uses the whole row for the statement. */
+    .hero--page .container:not(:has(.lead)) > h1 { grid-column: 1 / -1; max-width: 24ch; }
+  }
+
+  .hero--photo { background: var(--white); border-bottom: 1px solid var(--line); padding: clamp(2.25rem, 5vw, 4rem) 0 clamp(2.25rem, 5vw, 4.5rem); }
+  /* Text and photo stack below 900 px. Both tracks may shrink, so a long word or a wide
+     figure cannot widen the row. */
+  .hero__grid { display: grid; gap: clamp(2rem, 5vw, 4rem); align-items: center; grid-template-columns: minmax(0, 1fr); }
+  .hero__grid > * { min-width: 0; }
+  @media (min-width: 900px) { .hero__grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+  .hero__text { min-width: 0; }
+  .hero__text h1 { max-width: 16ch; }
+  .hero__figure { aspect-ratio: 5 / 4; width: 100%; }
+
+  /* The home hero fills most of the first screen without pushing the next section off it. */
+  .hero--home { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; min-height: min(74vh, 720px); padding: clamp(5rem, 12vw, 9rem) 0 clamp(2.5rem, 5vw, 4rem); }
+  .hero__bg { position: absolute; inset: 0; }
+  .hero__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
+  /* One-sided scrim: dense enough for 4.5:1 under the text, clear on the far side so the
+     photograph still reads as a photograph rather than a grey wash. */
+  .hero__bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(94deg, rgba(21,25,28,.93) 0%, rgba(21,25,28,.86) 34%, rgba(21,25,28,.55) 62%, rgba(21,25,28,.26) 100%),
+      linear-gradient(to top, rgba(21,25,28,.7) 0%, rgba(21,25,28,0) 46%);
+  }
+  .hero__home { position: relative; width: 100%; min-width: 0; }
+  .hero__eyebrow { margin-bottom: 1.25rem; }
+  .hero__title { font-size: var(--fs-hero); line-height: 1; letter-spacing: -0.04em; font-stretch: var(--wdth-display); max-width: 15ch; margin-bottom: 0.55em; }
+  .hero--home .lead { font-size: clamp(1.05rem, 0.98rem + 0.5vw, 1.3rem); max-width: 52ch; color: #E4E8EA; }
+  .hero--centre .hero__home { max-width: 62ch; margin-inline: auto; text-align: center; }
+  .hero--centre .hero__title { max-width: none; }
+  .hero--centre .lead { margin-inline: auto; }
+
+  /* On a short laptop the hero gives height back so the section below is visible on load. */
+  @media (min-width: 900px) and (max-height: 780px) {
+    .hero--home { min-height: 0; padding-block: 4.5rem 3rem; }
+    .hero__title { font-size: clamp(2.6rem, 1.8rem + 2.6vw, 3.6rem); }
+  }
+  /* On a phone the scrim runs bottom to top instead of side to side, because the text sits
+     across the full width. */
+  @media (max-width: 600px) {
+    .hero--home { min-height: min(70vh, 560px); }
+    .hero__bg::after { background: linear-gradient(to top, rgba(21,25,28,.94) 12%, rgba(21,25,28,.74) 52%, rgba(21,25,28,.5) 100%); }
+  }
+
+  @media print {
+    .hero--home { min-height: 0; padding-block: 0 1rem; color: #000; }
+    .hero__bg { display: none; }
+    .hero--home .lead, .hero__title { color: #000; }
+    .hero__figure { aspect-ratio: auto; max-width: 9cm; }
+  }
+</style>

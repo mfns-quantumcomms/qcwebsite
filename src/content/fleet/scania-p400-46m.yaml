@@ -1,0 +1,17 @@
+name: 46 m platform on Scania P400 6x6
+shortName: 46 m (Scania 6x6)
+unitClass: truck-mounted
+oem: To be confirmed
+chassis: Scania P400 6x6
+workingHeight: 46
+swlKg: "600"
+maxWindMs: 12.5
+gvwT: 18
+jacking: { normal: "6.2 × 5.85 m", narrow: "2.8 × 5.85 m", oneSide: "4.5 × 5.85 m" }
+licence: HR
+fourWd: true
+status: in-service
+homeDepots: [craigieburn]
+idealFor: [Mid-height tower works, Rural and unsealed access with 6x6, Sites needing one-side or narrow jacking]
+order: 6
+meta: { verified: false, source: "Fleet Portfolio 2019 spec sheet. Client to confirm", lastVerified: null }

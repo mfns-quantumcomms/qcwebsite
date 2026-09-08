@@ -1,0 +1,79 @@
+---
+/**
+ * Static location map for one depot.
+ *
+ * The image is baked at build time by scripts/build-maps.mjs from OpenStreetMap tiles and
+ * served from our own origin, so a visitor's browser makes no third-party request and the
+ * content security policy needs no exception. Attribution is required by the ODbL licence
+ * and is printed under every map.
+ *
+ * Falls back to an address block with a directions link when a depot has no baked map,
+ * which is the case for any depot the client has not confirmed.
+ */
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  depot: CollectionEntry<'depots'>;
+  ratio?: 'wide' | 'square';
+  class?: string;
+}
+const { depot, ratio = 'wide', class: cls = '' } = Astro.props;
+const d = depot.data;
+
+const maps = import.meta.glob<{ default: ImageMetadata }>('/src/assets/maps/*.jpg', { eager: true });
+const map = maps[`/src/assets/maps/${depot.id}.jpg`]?.default;
+
+const addressLine = [d.street, `${d.suburb} ${d.state} ${d.postcode ?? ''}`.trim()].filter(Boolean).join(', ');
+const directions = d.mapUrl ?? (d.geo
+  ? `https://www.google.com/maps/dir/?api=1&destination=${d.geo.lat},${d.geo.lng}`
+  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine)}`);
+---
+<figure class:list={['dmap', `dmap--${ratio}`, cls]}>
+  {map ? (
+    <a class="dmap__link" href={directions} target="_blank" rel="noopener">
+      <Image
+        src={map}
+        alt={`Location map showing the ${d.name} at ${addressLine}`}
+        widths={[480, 800, 1000]}
+        sizes="(min-width: 860px) 50vw, 100vw"
+        loading="lazy"
+        class="dmap__img"
+      />
+      <span class="dmap__cta">Get directions<span class="visually-hidden"> to {d.name} (opens Google Maps in a new tab)</span></span>
+    </a>
+  ) : (
+    <div class="dmap__placeholder">
+      <p class="dmap__addr">{addressLine}</p>
+      <p><a href={directions} target="_blank" rel="noopener">Get directions<span class="visually-hidden"> (opens Google Maps in a new tab)</span></a></p>
+    </div>
+  )}
+  <figcaption class="dmap__cap">
+    {map && <span>Map data &copy; OpenStreetMap contributors. </span>}
+    {addressLine}
+  </figcaption>
+</figure>
+
+<style>
+  /* The map is a photograph of a place, so it is presented the way the media card presents
+     one: square corners, no shadow, and a 2 px rule carrying the caption under it. */
+  .dmap { margin: 0; display: flex; flex-direction: column; min-width: 0; }
+  .dmap__link { position: relative; display: block; overflow: hidden; background: var(--concrete); text-decoration: none; }
+  .dmap__img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s cubic-bezier(.2,.6,.2,1); }
+  .dmap__link:hover .dmap__img { transform: scale(1.03); }
+  .dmap--wide .dmap__link { aspect-ratio: 16 / 10; }
+  .dmap--square .dmap__link { aspect-ratio: 1 / 1; }
+  .dmap__cta { position: absolute; left: 0; bottom: 0; display: inline-flex; align-items: center; min-height: 44px; padding: 0.55rem 1.1rem; background: var(--white); color: var(--deep-green); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-dense); }
+  .dmap__link:hover .dmap__cta { background: var(--deep-green); color: var(--white); }
+  .dmap__placeholder { border: 1px solid var(--concrete); padding: clamp(1rem, 3vw, 1.5rem); background: var(--mist); }
+  .dmap__addr { font-family: var(--font-display); font-weight: 600; color: var(--ink); margin-bottom: 0.35rem; }
+  .dmap__placeholder p:last-child { margin: 0; }
+  .dmap__cap { margin-top: 0.85rem; padding-top: 0.85rem; border-top: 2px solid var(--ink); font-size: var(--fs-caption); color: var(--steel); }
+  /* Reversed out of Ink the rule takes the green, as the media card's does. */
+  :global(.section--dark) .dmap__cap, :global(.section--charcoal) .dmap__cap { border-top-color: var(--quantum-green); color: var(--on-ink-quiet); }
+  :global(.section--dark) .dmap__placeholder, :global(.section--charcoal) .dmap__placeholder { background: rgba(255,255,255,.05); border-color: var(--rule-on-ink); }
+  :global(.section--dark) .dmap__addr, :global(.section--charcoal) .dmap__addr { color: var(--white); }
+  @media (max-width: 560px) {
+    .dmap--wide .dmap__link { aspect-ratio: 4 / 3; }
+  }
+</style>

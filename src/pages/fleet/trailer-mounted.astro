@@ -1,0 +1,144 @@
+---
+/**
+ * Trailer-mounted EWP class page. The register has no trailer units yet, so the page
+ * explains the class and renders a clear placeholder until the client supplies entries.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import FleetTable from '@components/FleetTable.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { photos, alts } from '@data/images';
+import { fleetAll } from '../../lib/facts';
+
+const units = (await fleetAll()).filter((u) => u.data.unitClass === 'trailer-mounted');
+const description =
+  'Trailer-mounted EWPs from Quantum Comms: towable platforms for lighter work at height, sites a truck cannot enter, and car-licence towing where permitted.';
+---
+<Base title="Trailer-mounted EWPs" description={description}>
+  <Hero
+    variant="photo"
+    eyebrow="Fleet and hire"
+    title="Trailer-mounted EWPs"
+    lead="A boom on a towable trailer, for jobs where a truck-mounted unit is more machine than the site needs or more weight than the ground will take."
+    image={photos.monopoleSky}
+    imageAlt={alts.monopoleSky}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Fleet', href: '/fleet/' }, { label: 'Trailer-mounted' }]} />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">The class</p>
+        <h2>When a trailer-mounted unit is the right choice</h2>
+      </div>
+      <div class="split split--wide-text reveal">
+        <div>
+          <p>A trailer-mounted EWP is an articulated or telescopic boom on its own trailer. It is towed to site, unhitched, levelled on outriggers and run from the platform. It has no cab and no truck chassis, so it is lighter, cheaper to move and easier to place.</p>
+          <p>Typical uses on telecommunications and utility sites:</p>
+          <ul>
+            <li>Small-cell, streetlight and low-level pole work where the working height is modest.</li>
+            <li>Rooftop and building access from a car park, driveway or footpath where a truck cannot set up.</li>
+            <li>Sites with load-limited slabs, paving or lawns that will not carry a truck-mounted unit.</li>
+            <li>Long-term placement on a compound or a maintenance contract, where the unit stays and the tow vehicle leaves.</li>
+            <li>Line-of-sight checks, inspections and photography at moderate heights.</li>
+          </ul>
+          <p>When the job calls for more height, more outreach, a heavier basket load or work near power lines, a <a href="/fleet/">truck-mounted unit</a> or an <a href="/fleet/insulated/">insulated unit</a> is the better fit.</p>
+        </div>
+        <div class="card">
+          <h3>Towing and licences</h3>
+          <p>Trailer-mounted units are towed behind a ute, four-wheel drive or light truck. Whether a car licence is enough depends on the trailer's aggregate trailer mass and the tow vehicle's rated towing capacity. Our earlier hire rate card listed a car-licence unit in this class.</p>
+          <p>Each unit page states the trailer mass and the licence class needed, so you can match it to your vehicle before booking. If you do not have a suitable tow vehicle, ask the depot to deliver the unit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.fleetYard} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Hire</p>
+        <h2>Hiring a trailer-mounted unit</h2>
+      </div>
+      <div class="bandgrid reveal">
+        <div>
+          <h3>Wet or dry</h3>
+          <p>Trailer units are available on the same wet and dry hire models as the truck-mounted fleet. Dry hire needs an operator with the right EWP licence class and an induction on the unit.</p>
+        </div>
+        <div>
+          <h3>Prestart and logbook</h3>
+          <p>Every unit leaves with a current logbook and is prestarted daily. Dry-hire operators record their own prestarts in the logbook for the term of the hire.</p>
+        </div>
+        <div>
+          <h3>Terms</h3>
+          <p>Minimum hire, travel, overtime and dilapidation reporting are explained on the <a href="/fleet/how-hire-works/">how hire works</a> page and set out in the <a href="/hire-terms/">hire terms</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Register</p>
+        <h2 id="reg-caption">Trailer-mounted units on the register</h2>
+      </div>
+      <div class="reveal">
+        {units.length > 0 ? (
+          <>
+            <p class="reg__hint" id="reg-hint">On a narrow screen, scroll the table sideways to reach safe working load, chassis and status.</p>
+            <div class="reg__scroll" tabindex="0" role="region" aria-labelledby="reg-caption" aria-describedby="reg-hint">
+              <FleetTable units={units} caption="Trailer-mounted units" scrollable={false} />
+            </div>
+            <p class="caption">Select a unit for its full specification, trailer mass, licence class and an enquiry form.</p>
+          </>
+        ) : (
+          <div class="notice">
+            <p><strong>No trailer-mounted units are listed on the register yet.</strong></p>
+            <p class="mb-0">Placeholder for the client: please supply, for each trailer-mounted unit, the make and model, working height, outreach, safe working load, aggregate trailer mass, towing licence class, home depot and current status. Units will appear here and get their own pages as soon as they are added to the register.</p>
+          </div>
+        )}
+        <p class="mt">Until then, the <a href="/fleet/">truck-mounted register</a> shows what is available now, and the depot can advise on the closest fit for a light-duty job.</p>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need a light-duty platform on site?"
+    text="Tell the depot the working height, the ground and whether you can tow. We will confirm the unit and delivery."
+    primary={{ label: 'Enquire about hire', href: '/fleet/how-hire-works/#enquiry' }}
+    secondary={{ label: 'Full fleet register', href: '/fleet/' }}
+  />
+</Base>
+
+<style>
+  .mt { margin-top: 1.5rem; }
+  .notice p { margin-bottom: 0.5em; }
+  /* Register table: the page owns the scroll container so it can be named and focused. */
+  .reg__hint { font-size: var(--fs-caption); color: var(--steel); margin: 0 0 0.6rem; max-width: var(--measure); }
+  .reg__scroll { overflow-x: auto; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+  .reg__scroll :global(.table-wrap) { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .reg__scroll :global(table) { min-width: 38rem; }
+  .reg__scroll :global(.chip) { white-space: normal; }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a page without adding another card grid. The three notes sit on rules, not cards. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.9) 42%, rgba(21,25,28,.66) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 62ch; }
+  .bandgrid { display: grid; gap: clamp(1.5rem, 3vw, 2.5rem); grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+  .bandgrid > div { min-width: 0; padding-top: 1.1rem; border-top: 1px solid var(--rule-on-ink); }
+  .bandgrid h3 { font-size: var(--fs-h4); margin-bottom: 0.5rem; }
+  .bandgrid p { margin: 0; }
+</style>

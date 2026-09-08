@@ -1,0 +1,163 @@
+---
+import Logo from './Logo.astro';
+import { primaryNav, utilityNav } from '@data/nav';
+import { company } from '@data/company';
+const path = Astro.url.pathname;
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+const current = (href: string) => (path === href ? 'page' : isActive(href) ? 'true' : undefined);
+---
+<header class="site-header">
+  <div class="utility">
+    <div class="container utility__row">
+      <a class="utility__link" href={`tel:${company.phoneMain.tel}`}><span class="visually-hidden">Call </span>{company.phoneMain.display}</a>
+      <a class="utility__link" href={`mailto:${company.email}`}>{company.email}</a>
+      <span class="utility__hours">{company.hours}</span>
+      <nav class="utility__nav" aria-label="Secondary">
+        {utilityNav.map((i) => <a href={i.href}>{i.label}</a>)}
+      </nav>
+    </div>
+  </div>
+  <div class="container bar">
+    <a href="/" class="brand" aria-label="Quantum Comms home"><Logo /></a>
+    <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="primary-menu" data-menu-toggle>
+      <span class="menu-btn__icon" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="menu-btn__label" aria-hidden="true">Menu</span>
+    </button>
+    <nav id="primary-menu" class="nav" aria-label="Primary">
+      <ul class="nav__list">
+        {primaryNav.map((item) => (
+          <li class="nav__item" data-has-children={item.children ? 'true' : undefined}>
+            {item.children ? (
+              <>
+                <a class:list={['nav__link', { 'is-active': isActive(item.href) }]} href={item.href} aria-current={current(item.href)}>{item.label}</a>
+                <button class="nav__disclosure" type="button" aria-expanded="false" aria-label={`Show ${item.label} pages`} data-submenu-toggle>
+                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </button>
+                <ul class="sub">
+                  {item.children.map((c) => (
+                    <li><a href={c.href} aria-current={path === c.href ? 'page' : undefined}>{c.label}</a></li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <a class:list={['nav__link', { 'is-active': isActive(item.href) }]} href={item.href} aria-current={current(item.href)}>{item.label}</a>
+            )}
+          </li>
+        ))}
+        <li class="nav__item nav__item--cta"><a class="btn btn--primary" href="/contact/">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header { background: var(--white); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 50; transition: box-shadow .25s ease; }
+  .site-header[data-scrolled="true"] { box-shadow: 0 1px 0 var(--concrete), 0 10px 30px -22px rgba(21,25,28,.5); }
+  /* Once the page has moved, the utility bar folds away and the main bar tightens, so the
+     header takes about half the vertical space it does at rest. */
+  .utility { overflow: hidden; max-height: 60px; transition: max-height .28s ease; }
+  .site-header[data-scrolled="true"] .utility { max-height: 0; }
+  .site-header[data-scrolled="true"] .bar { min-height: 62px; }
+  @media (prefers-reduced-motion: reduce) { .utility, .site-header, .bar { transition: none; } }
+  .utility { background: var(--ink); color: var(--on-ink); font-size: var(--fs-caption); }
+  .utility__row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 1.5rem; min-height: 40px; padding-block: 0.3rem; }
+  .utility__link { color: var(--white); text-decoration: none; font-weight: 500; min-height: 32px; display: inline-flex; align-items: center; overflow-wrap: anywhere; }
+  .utility__link:hover { color: var(--signal); }
+  .utility__hours { color: var(--on-ink-quiet); }
+  .utility__nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: 0.2rem 1.25rem; min-width: 0; }
+  .utility__nav a { color: var(--on-ink); text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+  .utility__nav a:hover { color: var(--signal); }
+  /* Below 720 px the bar keeps only what someone on a phone needs: the number and the address,
+     both at a 44 px tap target. The hidden links stay reachable from the footer. */
+  @media (max-width: 720px) {
+    .utility__hours, .utility__nav { display: none; }
+    .utility__link { min-height: 44px; }
+    .utility__row { gap: 0 1rem; }
+  }
+
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: clamp(0.5rem, 2vw, 1rem); min-height: 84px; transition: min-height .28s ease; }
+  .brand { display: inline-flex; text-decoration: none; padding: 0.4rem 0; min-width: 0; }
+  .menu-btn { display: none; align-items: center; flex: 0 0 auto; gap: 0.6rem; background: none; border: 2px solid var(--navy); border-radius: var(--radius); padding: 0.5rem 0.8rem; min-height: 44px; min-width: 44px; justify-content: center; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-dense); color: var(--navy); cursor: pointer; }
+  .menu-btn__icon { display: inline-flex; flex-direction: column; gap: 4px; width: 18px; }
+  .menu-btn__icon span { display: block; height: 2px; background: currentColor; border-radius: 2px; }
+
+  /* Desktop bar. At its densest (1101 px, just above the breakpoint) the lockup and the seven
+     items measure 917 px of the 1046 px available, so the row never wraps. */
+  .nav__list { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 0.25rem; max-width: none; }
+  .nav__item { position: relative; display: flex; align-items: center; min-width: 0; margin: 0; }
+  .nav__link { display: inline-flex; align-items: center; min-height: 44px; padding: 0.4rem 0.6rem; color: var(--ink); font-family: var(--font-display); font-weight: 500; font-size: 0.98rem; text-decoration: none; border-radius: var(--radius); white-space: nowrap; }
+  .nav__link:hover { color: var(--deep-green); background: var(--mist); }
+  .nav__link.is-active { color: var(--ink); background: none; box-shadow: inset 0 -3px 0 var(--quantum-green); border-radius: 0; }
+  .nav__disclosure { background: none; border: 0; color: var(--navy); width: 32px; min-height: 44px; display: inline-grid; place-items: center; cursor: pointer; border-radius: var(--radius); margin-left: -0.35rem; flex: 0 0 auto; }
+  .nav__disclosure[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .nav__item--cta { margin-left: 0.5rem; }
+  .sub { position: absolute; top: 100%; left: 0; width: max-content; min-width: 260px; max-width: 320px; list-style: none; margin: 0; padding: 0.5rem; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); display: none; z-index: 60; }
+  /* A menu near the right edge hangs its panel from the right so it stays on screen. */
+  .nav__item:nth-last-child(-n+3) > .sub { left: auto; right: 0; }
+  .nav__item:hover > .sub, .nav__item:focus-within > .sub, .nav__item[data-open="true"] > .sub { display: block; }
+  .sub li { margin: 0; }
+  .sub a { display: flex; align-items: center; min-height: 44px; padding: 0.5rem 0.75rem; color: var(--ink); text-decoration: none; border-radius: var(--radius); font-weight: 500; }
+  .sub a:hover, .sub a[aria-current="page"] { background: var(--concrete); color: var(--green-deep); }
+
+  @media (max-width: 1100px) {
+    .menu-btn { display: inline-flex; }
+    .nav { display: none; position: absolute; left: 0; right: 0; top: 100%; background: var(--white); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); padding: 0.75rem var(--gutter-right) 1.25rem var(--gutter-left); }
+    /* On a short laptop or a phone in landscape the panel scrolls instead of running off screen.
+       --header-h is measured in the script below, so a wrapped utility bar is accounted for. */
+    .nav[data-open="true"] { display: block; max-height: calc(100vh - var(--header-h, 116px)); max-height: calc(100dvh - var(--header-h, 116px)); overflow-y: auto; overscroll-behavior: contain; }
+    .nav__list { flex-direction: column; align-items: stretch; gap: 0; }
+    .nav__item { flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+    .nav__link { flex: 1 1 auto; min-width: 0; padding: 0.75rem 0.5rem; white-space: normal; }
+    .nav__disclosure { width: 44px; }
+    .sub { position: static; display: none; width: 100%; max-width: none; min-width: 0; box-shadow: none; border: 0; padding: 0 0 0.5rem 0.75rem; }
+    .nav__item:hover > .sub { display: none; }
+    .nav__item[data-open="true"] > .sub { display: block; }
+    .nav__item--cta { margin: 0.75rem 0 0; border: 0; }
+    .nav__item--cta .btn { width: 100%; }
+  }
+
+  /* 320 px: the lockup and the button are the whole bar, so the button drops its word. */
+  @media (max-width: 380px) {
+    .menu-btn__label { display: none; }
+    .menu-btn { padding-inline: 0.6rem; }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const nav = document.getElementById('primary-menu');
+  // The open menu is capped to the space under the header, so it never runs past the
+  // bottom of a short screen. The utility bar wraps at narrow widths, so measure it.
+  const header = document.querySelector<HTMLElement>('.site-header');
+
+  // Once the page moves, the utility bar folds away and the bar tightens.
+  const onScroll = () => header?.setAttribute('data-scrolled', String(window.scrollY > 24));
+  onScroll();
+  addEventListener('scroll', onScroll, { passive: true });
+  const setHeaderHeight = () => {
+    if (header) document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+  };
+  setHeaderHeight();
+  if (header && 'ResizeObserver' in window) new ResizeObserver(setHeaderHeight).observe(header);
+  else window.addEventListener('resize', setHeaderHeight);
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    nav?.setAttribute('data-open', String(!open));
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-submenu-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest<HTMLElement>('.nav__item');
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      document.querySelectorAll<HTMLButtonElement>('[data-submenu-toggle]').forEach((b) => { if (b !== btn) { b.setAttribute('aria-expanded', 'false'); b.closest<HTMLElement>('.nav__item')?.removeAttribute('data-open'); } });
+      btn.setAttribute('aria-expanded', String(!open));
+      if (open) item?.removeAttribute('data-open'); else item?.setAttribute('data-open', 'true');
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll<HTMLElement>('[data-open="true"]').forEach((el) => el.removeAttribute('data-open'));
+      document.querySelectorAll<HTMLButtonElement>('[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    }
+  });
+</script>

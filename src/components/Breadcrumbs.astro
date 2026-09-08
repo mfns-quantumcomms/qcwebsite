@@ -1,0 +1,39 @@
+---
+interface Crumb { label: string; href?: string }
+interface Props { items: Crumb[] }
+const { items } = Astro.props;
+const site = Astro.site?.href.replace(/\/$/, '') ?? '';
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [{ label: 'Home', href: '/' }, ...items].map((c, i) => ({
+    '@type': 'ListItem', position: i + 1, name: c.label, ...(c.href ? { item: site + c.href } : {}),
+  })),
+};
+---
+<nav class="crumbs" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="/">Home</a></li>
+    {items.map((c, i) => (
+      <li>{c.href && i < items.length - 1 ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</li>
+    ))}
+  </ol>
+</nav>
+<script is:inline type="application/ld+json" set:html={JSON.stringify(ld)} />
+<style>
+  /* The trail wraps to as many lines as it needs at 320 px, and each link is a 44 px target.
+     Set in the display face at label size so it reads as navigation, not as body copy. */
+  .crumbs { font-family: var(--font-display); font-size: var(--fs-caption); line-height: 1.3; margin-bottom: 0.25rem; }
+  .crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0 0.4rem; max-width: none; }
+  .crumbs li { display: inline-flex; align-items: center; margin: 0; min-width: 0; }
+  .crumbs li + li::before { content: '/'; color: var(--concrete); margin-right: 0.4rem; }
+  .crumbs a, .crumbs [aria-current] { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: break-word; }
+  .crumbs a { color: var(--steel); text-decoration: none; }
+  .crumbs a:hover { color: var(--deep-green); text-decoration: underline; text-underline-offset: 0.2em; }
+  .crumbs [aria-current] { color: var(--ink); font-weight: 500; }
+  /* Reversed out of Ink the separators and the trail lift, so the current page still leads. */
+  :global(.section--dark) .crumbs a, :global(.section--charcoal) .crumbs a { color: var(--on-ink-quiet); }
+  :global(.section--dark) .crumbs a:hover, :global(.section--charcoal) .crumbs a:hover { color: var(--quantum-green); }
+  :global(.section--dark) .crumbs [aria-current], :global(.section--charcoal) .crumbs [aria-current] { color: var(--white); }
+  :global(.section--dark) .crumbs li + li::before, :global(.section--charcoal) .crumbs li + li::before { color: var(--rule-on-ink); }
+</style>

@@ -1,0 +1,276 @@
+---
+/**
+ * Contact. Every route to a human stays on the page: head office phone, mobile, email, hours,
+ * the after-hours arrangement, a card per confirmed depot, the document requests and the form.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import DepotCard from '@components/DepotCard.astro';
+import DepotMap from '@components/DepotMap.astro';
+import CoverageMap from '@components/CoverageMap.astro';
+import EnquiryForm from '@components/EnquiryForm.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { photos, alts } from '@data/images';
+import { company, certifications } from '@data/company';
+import { confirmedDepots, coverageStates } from '../lib/facts';
+
+const depots = await confirmedDepots();
+const states = await coverageStates();
+const hq = company.hqAddress;
+// The head office map comes from the depot register, not from a typed address.
+const hqDepot = depots.find((d) => d.data.role === 'Head office');
+const isoStandards = certifications.map((c) => c.standard.split(':')[0]).join(', ');
+const description = 'Phone, email and hours for Quantum Comms head office and depots, the after-hours arrangement, how to request documents, and the enquiry form.';
+const lead = `Head office is in ${hq.suburb}, ${hq.state}. Call the depot nearest your site, email the office, or send the form below. We reply during business hours.`;
+
+const documents = [
+  { name: 'Capability statement', note: 'The current statement is published as a web page. A PDF copy is issued on request.', href: '/capability-statement/', label: 'Read it online' },
+  { name: 'Prequalification and tender pack', note: 'Insurances, licences, policies and management system evidence, assembled for your panel or tender.', href: '/compliance/', label: 'What the pack covers' },
+  { name: 'Insurance certificates of currency', note: 'Issued for a named project, panel or purchase order. Tell us the insured party and the limits you need to see.', href: '/compliance/', label: 'Insurances' },
+  { name: 'ISO certificates', note: `${isoStandards} certificates from our JAS-ANZ accredited registrar, with scope and expiry.`, href: '/compliance/', label: 'Management systems' },
+  { name: 'Fleet spec sheets', note: 'Working height, outreach, safe working load, transport dimensions and jacking footprint for each unit.', href: '/fleet/', label: 'Fleet register' },
+  { name: 'Hire terms', note: 'Our standard EWP and plant hire conditions. Your signed hire agreement prevails.', href: '/hire-terms/', label: 'Read the hire terms' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  '@id': `${company.siteUrl}/contact/#webpage`,
+  url: `${company.siteUrl}/contact/`,
+  name: 'Contact Quantum Comms',
+  description,
+  inLanguage: 'en-AU',
+  about: { '@id': `${company.siteUrl}/#organization` },
+  mainEntity: {
+    '@type': 'Organization',
+    '@id': `${company.siteUrl}/#organization`,
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        contactType: 'sales',
+        telephone: company.phoneMain.tel,
+        email: company.email,
+        areaServed: 'AU',
+        availableLanguage: 'en',
+        hoursAvailable: { '@type': 'OpeningHoursSpecification', dayOfWeek: [...company.hoursSpec.days], opens: company.hoursSpec.opens, closes: company.hoursSpec.closes },
+      },
+      { '@type': 'ContactPoint', contactType: 'customer support', telephone: company.phoneMobile.tel, areaServed: 'AU', availableLanguage: 'en' },
+    ],
+  },
+};
+---
+<Base title="Contact" description={description} jsonLd={jsonLd}>
+  <Hero variant="photo" eyebrow="Contact" title="Contact Quantum Comms" lead={lead} image={photos.truckUnitDepot} imageAlt={alts.truckUnitDepot}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Contact' }]} />
+    <div class="btn-row">
+      <a class="btn btn--primary" href={`tel:${company.phoneMain.tel}`}>Call {company.phoneMain.display}</a>
+      <a class="btn btn--secondary" href="#enquiry">Send an enquiry</a>
+    </div>
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Head office</p>
+        <h2>Office, accounts and project management</h2>
+      </div>
+      <div class="split split--wide-text split--top reveal">
+        <div>
+          <dl class="spec office">
+            <dt>Phone</dt>
+            <dd><a href={`tel:${company.phoneMain.tel}`}>{company.phoneMain.display}</a></dd>
+            <dt>Mobile</dt>
+            <dd><a href={`tel:${company.phoneMobile.tel}`}>{company.phoneMobile.display}</a></dd>
+            <dt>Email</dt>
+            <dd><a href={`mailto:${company.email}`}>{company.email}</a></dd>
+            <dt>Hours</dt>
+            <dd>{company.hours}</dd>
+            <dt>Address</dt>
+            <dd>
+              <address class="addr">{hq.street}<br />{hq.suburb} {hq.state} {hq.postcode}</address>
+              {!hqDepot && <a href={company.googleMaps} rel="noopener" target="_blank">Open in Google Maps<span class="visually-hidden"> (opens in a new tab)</span></a>}
+            </dd>
+            <dt>Entity</dt>
+            <dd>{company.legalName}, ABN {company.abn}</dd>
+          </dl>
+          {hqDepot && <div class="office-map"><DepotMap depot={hqDepot} /></div>}
+        </div>
+        <aside class="card" aria-labelledby="ready-h">
+          <h3 id="ready-h">What helps us answer quickly</h3>
+          <p><strong>EWP or plant hire</strong></p>
+          <ul>
+            <li>Site address and the access route for a heavy vehicle</li>
+            <li>Dates, shift pattern and whether you need wet or dry hire</li>
+            <li>Working height and outreach you need to reach</li>
+            <li>Ground conditions and any limits on jacking footprint</li>
+            <li>Site or carrier inductions the operator will need</li>
+          </ul>
+          <p><strong>Rigging or civil works</strong></p>
+          <ul>
+            <li>Design pack or scope, carrier and programme name</li>
+            <li>Site identifiers, target dates and whether civils are included</li>
+          </ul>
+          <p><strong>Prequalification</strong></p>
+          <ul class="mb-0">
+            <li>Panel or tender name, the format your portal accepts, and the due date</li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.ewpCityFacade} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">After hours</p>
+        <h2>Urgent site issues on an active job</h2>
+        <p class="lead">{company.afterHours}</p>
+        <div class="btn-row">
+          <a class="btn btn--primary" href={`tel:${company.phoneMobile.tel}`}>Call {company.phoneMobile.display}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Depots</p>
+        <h2>Depots and fleet yards</h2>
+        <p class="lead">Each card is a depot the company has confirmed. Crews and units travel; service coverage extends to {states.join(', ')}.</p>
+      </div>
+      <div class="mapsplit reveal">
+        <div class="covwrap">
+          <CoverageMap />
+        </div>
+        <div>
+          <p>Each depot page lists local capabilities and the units based there. Depots named in earlier company documents that do not appear here are under review.</p>
+          <p class="mb-0"><a class="arrow-link" href="/locations/">Depots, coverage and how crews mobilise</a></p>
+        </div>
+      </div>
+      <div class="grid grid--3 reveal">
+        {depots.map((d) => <DepotCard depot={d} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Documents</p>
+        <h2>Request documents for procurement</h2>
+        <p class="lead">Most due-diligence documents are issued on request so we can tailor them to your panel or project. Choose a topic on the form and say which documents you need.</p>
+      </div>
+      <div class="grid grid--3 reveal">
+        {documents.map((doc) => (
+          <article class="card doccard">
+            <h3>{doc.name}</h3>
+            <p>{doc.note}</p>
+            <div class="doc-links">
+              <a class="arrow-link" href={doc.href}>{doc.label}</a>
+              <a class="doc-request" href="#enquiry">Request<span class="visually-hidden"> {doc.name}</span></a>
+            </div>
+          </article>
+        ))}
+      </div>
+      <p class="caption doc-note">The <a href="/downloads/">document index</a> lists every document and how to get it.</p>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container form-wrap">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Enquiry</p>
+      </div>
+      <div class="reveal">
+        <EnquiryForm heading="Send an enquiry" />
+        <p class="caption form-after">Your details are used only to answer this enquiry, as set out in the <a href="/privacy/">privacy policy</a>. After you send, you will see a reference number to quote if you call.</p>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need documents before you pick up the phone?"
+    text="The capability statement is online now. The compliance page lists our management systems, training matrix and what the prequalification pack contains."
+    primary={{ label: 'Capability statement', href: '/capability-statement/' }}
+    secondary={{ label: 'Compliance and prequalification', href: '/compliance/' }}
+  />
+</Base>
+
+
+<style>
+  .split--top { align-items: start; }
+  .split > * { min-width: 0; }
+  .office { margin-bottom: 1.5rem; }
+  .office dd { margin-bottom: 0.35rem; }
+  /* The email address is one long unbroken string in a narrow column. */
+  .office dd, .office dd a { overflow-wrap: anywhere; }
+  .addr { font-style: normal; }
+  .office-map { min-width: 0; }
+  /* A white card on a white section has nothing to sit against, so it takes the quiet ground. */
+  .section--white .card { background: var(--mist); }
+  .card ul { margin-bottom: 0.5rem; }
+  .card p + ul { margin-top: -0.25rem; }
+
+  /* Coverage map beside the depot note. Two columns only from 1080 px: a narrower
+     column shrinks the map far enough to push its pin labels under 12 px. */
+  .mapsplit { display: grid; gap: clamp(1.5rem, 4vw, 3rem); align-items: center; margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem); }
+  @media (min-width: 1080px) { .mapsplit { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+  .mapsplit > * { min-width: 0; }
+
+  /* The map draws its depot labels in its own coordinate space, so the figure keeps a
+     right gutter for the label over the Queensland coast and clips anything past it.
+     Below 480 px the map is too small to carry a 12 px label, so the pins and the legend
+     do the work and the depot names are read from the cards below. */
+  .covwrap { min-width: 0; overflow: hidden; padding-right: 14%; max-width: 520px; margin-inline: auto; }
+  .covwrap :global(svg.covmap__svg .covmap__label) { font-size: 34px; }
+  @media (max-width: 479px) {
+    .covwrap { padding-right: 2%; }
+    .covwrap :global(svg.covmap__svg .covmap__label) { display: none; }
+  }
+
+  /* Document cards: text only, so a plain card is right. The primary link takes the arrow. */
+  .doccard h3 { font-size: var(--fs-h4); }
+  .doc-links { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 0 1.25rem; }
+  .doc-request { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-dense); }
+  .doc-note { margin-top: clamp(1.25rem, 2.5vw, 1.75rem); }
+
+  .form-wrap { max-width: 860px; }
+  /* The enquiry section head carries the label only; the form supplies the heading. */
+  .form-wrap .section-head { margin-bottom: clamp(1.25rem, 2.5vw, 1.75rem); }
+  .form-after { margin-top: 1rem; }
+  [aria-invalid="true"] { border-color: var(--danger) !important; }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  /* Below 1000 px the text runs the full width of the band, so the side scrim is replaced by
+     a dense bottom-to-top one, the same move the home hero makes on a phone. */
+  @media (max-width: 1000px) {
+    .feature__bg::after { background: linear-gradient(to top, rgba(21,25,28,.96) 15%, rgba(21,25,28,.9) 100%); }
+  }
+  .feature__text { max-width: 60ch; }
+  .feature__text .btn-row { margin-top: 1.5rem; }
+
+  /* On paper the band is a plain text block and every revealed block is already in place. */
+  @media print {
+    .feature__bg { display: none !important; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    .section-head { display: block !important; max-width: none; margin-bottom: 0.5rem; }
+    .section-head__rule { display: none !important; }
+  }
+</style>

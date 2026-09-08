@@ -1,0 +1,35 @@
+# Legacy WordPress URLs (all 24 pages in the 2022 sitemap) -> new structure. 301 permanent.
+/ewp-hire/                              /fleet/                                   301
+/comms-rigging/                         /services/comms-and-rigging/              301
+/civil-works/                           /services/civil-works/                    301
+/civil-work/                            /services/civil-works/                    301
+/steel-fabrication/                     /services/steel-fabrication/              301
+/thermal-coating/                       /services/thermal-coating/                301
+/service-and-maintenance/               /services/service-and-maintenance/        301
+/generator-plant-hire/                  /fleet/generators-and-plant/              301
+/trailer-mounted-cherry-picker/         /fleet/trailer-mounted/                   301
+/trailer-mounted-cherry-pickers/        /fleet/trailer-mounted/                   301
+/mobile-cherry-picker/                  /fleet/                                   301
+/cherry-pickers/                        /fleet/                                   301
+/cherry-picker-machine/                 /fleet/                                   301
+/cherry-picker-lift/                    /fleet/                                   301
+/cherry-picker-boom-lift/               /fleet/                                   301
+/boom-type-ewp/                         /fleet/                                   301
+/boom-type-elevating-work-platform/     /fleet/                                   301
+/elevated-work-platform/                /fleet/                                   301
+/ewp-types/                             /fleet/                                   301
+/ewp-over-11m/                          /fleet/                                   301
+/gallery/                               /projects/                                301
+/contact-us/                            /contact/                                 301
+/contact                                /contact/                                 301
+/sitemap.xml                            /sitemap-index.xml                        301
+/page-sitemap.xml                       /sitemap-index.xml                        301
+# Stale public documents -> current pages
+/wp-content/uploads/2021/08/Hire-Rates-2019.pdf                                            /fleet/how-hire-works/     301
+/wp-content/uploads/2021/08/Fleet-portfolio_2019.-PDF.pdf                                  /fleet/                    301
+/wp-content/uploads/2021/08/QComms-Capability-Statement-V11_With-Photo-Banner.pdf          /capability-statement/     301
+# WordPress leftovers
+/author/*                               /about/                                   301
+/feed/                                  /about/news/                              301
+/wp-json/*                              /                                         301
+/xmlrpc.php                             /                                         301

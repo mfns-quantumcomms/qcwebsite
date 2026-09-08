@@ -1,0 +1,17 @@
+name: Bronto 55 m on Scania 8x8
+shortName: 55 m Bronto (Scania)
+unitClass: truck-mounted
+oem: Bronto Skylift
+chassis: Scania P114 CB8x8HZ 340
+workingHeight: 55
+swlKg: "700"
+maxWindMs: 12.5
+gvwT: 32
+jacking: { normal: "6.0 × 6.75 m", oneSide: "4.4 × 6.75 m", narrow: "2.8 × 6.75 m" }
+licence: HR
+status: in-service
+homeDepots: [craigieburn]
+idealFor: [Tower and mast works to 55 m, Head frame swap-outs, Antenna and RRU installs, Narrow-street access with narrow jacking]
+order: 3
+meta: { verified: false, source: "Fleet Portfolio 2019 spec sheet (two units of this type listed). Client to confirm", lastVerified: null }
+notes: The 2019 portfolio lists two Scania 8x8 Bronto 55 m units with identical specifications.

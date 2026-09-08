@@ -1,0 +1,304 @@
+---
+/**
+ * Safety, quality and compliance. Everything here comes from src/data/company.ts:
+ * certifications (with verification chips), the training matrix, inductions, vehicle kit
+ * and operator credentials. Insurances are a placeholder until the client supplies limits.
+ * The certification table and the training matrix are unchanged; only their setting is.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import EnquiryForm from '@components/EnquiryForm.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { photos, alts } from '@data/images';
+import { company, certifications, training, headlineFacts } from '@data/company';
+
+const isoList = certifications.map((c) => c.standard.split(':')[0]).join(', ');
+const description = `Certified management systems (${isoList}), training matrix, inductions, insurances and the ${company.tradingName} prequalification pack.`;
+const anyUnverifiedCert = certifications.some((c) => !c.certificate.verified);
+const countWord = ['no', 'one', 'two', 'three', 'four', 'five', 'six'][certifications.length] ?? String(certifications.length);
+
+/* Counted from the registers above. No figure on this page is typed by hand. */
+const stats: Array<{ n: string; text?: boolean; l: string }> = [
+  { n: String(certifications.length), l: `Certified management systems: ${isoList}` },
+  { n: String(training.everyFieldEmployee.length), l: 'Training and induction items every field employee holds' },
+  { n: String(training.vehicleKit.length), l: "Items of safety kit in every team leader's vehicle" },
+  { n: 'JAS-ANZ', text: true, l: 'Accreditation behind our certification body' },
+];
+
+/** Documents procurement teams ask for. Limits, insurers and expiry dates are supplied by the client. */
+const insuranceDocs = [
+  { name: 'Public and products liability', ask: 'Certificate of currency showing insurer, policy number, limit per occurrence and expiry.' },
+  { name: 'Workers compensation', ask: 'Certificate of currency for each state in which crews are employed.' },
+  { name: 'Motor vehicle and mobile plant', ask: 'Certificate of currency covering truck-mounted EWPs, trucks and earthmoving plant.' },
+  { name: 'Professional indemnity', ask: 'Certificate of currency where design or engineering services are in scope.' },
+];
+
+const packContents = [
+  'ISO certificates with scope of certification and expiry',
+  'Certificates of currency for the insurances listed above',
+  'Health and safety, quality and environmental policies',
+  'Training matrix and current tickets for the nominated crew',
+  'Site safety pack: risk assessments and plant SWMS for the business area',
+  'Log book and service history for any unit being hired',
+];
+---
+<Base title="Safety, quality and compliance" description={description}>
+  <Hero
+    variant="photo"
+    eyebrow="Compliance"
+    title="Safety, quality and compliance"
+    lead="What an HSEQ or procurement reviewer needs to verify before we start: certified management systems, the training every field employee holds, what each crew vehicle carries, and how to get the documents."
+    image={photos.basketOnMonopole}
+    imageAlt={alts.basketOnMonopole}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Compliance' }]} />
+  </Hero>
+
+  <section class="section section--tight section--mist">
+    <div class="container">
+      <ul class="statband reveal" aria-label="Compliance facts">
+        {stats.map((s) => (
+          <li>
+            <span class:list={["statband__n", { "statband__n--text": s.text }]}>{s.n}</span>
+            <span class="statband__l">{s.l}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Management systems</p>
+        <h2>Certified to {countWord} ISO standards</h2>
+        <p class="lead">{company.tradingName} runs one integrated management system covering quality, environmental management and occupational health and safety. Certification is held through a JAS-ANZ accredited certification body and is audited on the registrar's surveillance cycle.</p>
+      </div>
+
+      <div class="split split--wide-text split--top reveal">
+        <div>
+          <p>The table lists each standard, its scope and the certificate number as recorded in our register. The certificates themselves, with the certified scope of activities and expiry dates, are supplied in the prequalification pack.</p>
+          <p class="mb-0"><a class="arrow-link" href="#prequal">Request the prequalification pack</a></p>
+        </div>
+        <dl class="spec entity">
+          <dt>Legal entity</dt><dd>{company.legalName}</dd>
+          <dt>Trading as</dt><dd>{company.tradingName}</dd>
+          <dt>Formerly</dt><dd>{company.formerName}</dd>
+          <dt>ABN</dt><dd>{company.abn}</dd>
+          <dt>ACN</dt><dd>{company.acn}</dd>
+          {headlineFacts.tradingSince.verified && (
+            <>
+              <dt>Trading since</dt><dd>{headlineFacts.tradingSince.value}</dd>
+            </>
+          )}
+        </dl>
+      </div>
+
+      <div class="reveal mt">
+        <p class="scroll-hint">Four columns. On a narrow screen, scroll the table sideways to reach the certificate number and registrar.</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Certified management systems">
+          <table>
+            <caption>Certified management systems</caption>
+            <thead>
+              <tr>
+                <th scope="col">Standard</th>
+                <th scope="col">Scope</th>
+                <th scope="col">Certificate number</th>
+                <th scope="col">Registrar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {certifications.map((c) => (
+                <tr>
+                  <th scope="row">{c.standard}</th>
+                  <td>{c.scope}</td>
+                  <td>
+                    <span class="cert-no">{c.certificate.value}</span>
+                    {!c.certificate.verified && <span class="chip chip--warn">Unverified, to be confirmed</span>}
+                  </td>
+                  <td>{c.registrar}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {anyUnverifiedCert && (
+          <p class="notice mt-sm">Certificate numbers marked unverified were read from the JAS-ANZ public register and are being checked against the issued certificates before launch. If you need the certificates now, request the prequalification pack below.</p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.riggerOnMonopole} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">On site</p>
+        <h2>What the system means on the job</h2>
+        <ul class="ticks">
+          <li>Every business area has plant SWMS and risk assessments in the site safety pack carried in each team leader's vehicle.</li>
+          <li>Site-specific SWMS, lift plans and tower rescue plans are prepared per job and issued before crews mobilise.</li>
+          <li>Hired plant goes out with a current log book and daily prestart checks, and comes back through the workshop for service.</li>
+          <li>Crews hold current carrier inductions, so site access does not wait on paperwork.</li>
+          <li>Reporting runs through your portal or ours, closed out with as-built photos and test results.</li>
+        </ul>
+        <a class="arrow-link" href="/fleet/how-hire-works/">How wet and dry hire works</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Training</p>
+        <h2>Minimum training for every field employee</h2>
+        <p class="lead">Every site-based employee holds the following as a minimum, renewed on the cycle shown. Records for a nominated crew are available on request.</p>
+      </div>
+
+      <div class="reveal">
+        <div class="table-wrap">
+          <table>
+            <caption>Training matrix, every field employee</caption>
+            <thead>
+              <tr>
+                <th scope="col">Training or induction</th>
+                <th scope="col">Renewal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {training.everyFieldEmployee.map(([course, cycle]) => (
+                <tr>
+                  <th scope="row">{course}</th>
+                  <td>{cycle}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="caption mt-sm">Source: {training.source}.</p>
+      </div>
+
+      <div class="grid grid--3 mt reveal">
+        <div class="card">
+          <h3>Specialist site inductions</h3>
+          <p>Crews are available with current inductions and training for:</p>
+          <ul class="card-list">{training.specialist.map((s) => <li>{s}</li>)}</ul>
+        </div>
+        <div class="card">
+          <h3>EWP operator credentials</h3>
+          <p>Operators supplied on wet hire hold:</p>
+          <ul class="card-list">{training.operatorCredentials.map((s) => <li>{s}</li>)}</ul>
+          <p class="mb-0"><a class="arrow-link" href="/fleet/how-hire-works/">How wet and dry hire works</a></p>
+        </div>
+        <div class="card">
+          <h3>Team leader vehicle kit</h3>
+          <p>Every team leader's vehicle carries:</p>
+          <ul class="card-list">{training.vehicleKit.map((s) => <li>{s}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Insurances</p>
+        <h2>Insurances and certificates of currency</h2>
+        <p class="lead">Procurement teams usually ask for the documents below. Certificates of currency are issued per request so the dates on them are current.</p>
+      </div>
+      <div class="notice reveal">
+        <p><strong>To be supplied.</strong> Insurer names, policy limits and expiry dates will be published here once confirmed. Until then, request them with the prequalification pack.</p>
+        <ul class="ins">
+          {insuranceDocs.map((i) => <li><strong>{i.name}.</strong> {i.ask}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist" id="prequal">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Prequalification</p>
+        <h2>Prequalification pack</h2>
+        <p class="lead">Tell us the panel, tender or project, the documents you need and the portal or format they should go into.</p>
+      </div>
+      <div class="split split--wide-text split--top reveal">
+        <div>
+          <p>The pack is assembled per request and typically includes:</p>
+          <ul>{packContents.map((p) => <li>{p}</li>)}</ul>
+          <p class="caption">For a summary version of all of this in one printable page, see the <a href="/capability-statement/">capability statement</a>.</p>
+        </div>
+        <EnquiryForm topic="prequal" source="/compliance/" heading="Request the pack" />
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need the certificates on file?"
+    text="Request the prequalification pack above, or download the capability statement for the summary version. Call head office if your portal needs something specific."
+    primary={{ label: 'Capability statement', href: '/capability-statement/' }}
+    secondary={{ label: 'Contact', href: '/contact/' }}
+  />
+</Base>
+
+<style>
+  .split--top { align-items: start; }
+  .split > * { min-width: 0; }
+  /* The entity panel sits on a white section, so it takes the quiet ground rather than white. */
+  .entity { align-self: start; background: var(--mist); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; }
+  /* Definition lists stack below 480 px so long values cannot push the page sideways. */
+  .spec { grid-template-columns: minmax(0, max-content) minmax(0, 1fr); }
+  .spec dt, .spec dd { overflow-wrap: anywhere; }
+  @media (max-width: 480px) {
+    .spec { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .spec dt { margin-top: 0.6rem; }
+    .spec dt:first-of-type { margin-top: 0; }
+  }
+  /* Wide tables scroll inside their own box; the box is focusable and named. */
+  .table-wrap { min-width: 0; }
+  .table-wrap .chip { white-space: normal; }
+  .scroll-hint { font-size: var(--fs-caption); color: var(--steel); margin: 0 0 0.6rem; max-width: var(--measure); }
+  .cert-no { display: inline-block; margin-right: 0.5rem; }
+  .grid > * { min-width: 0; }
+  .card-list { margin: 0; padding-left: 1.1rem; }
+  .ins { margin: 0.5rem 0 0; }
+  .ins li { margin-bottom: 0.5rem; }
+  .mt { margin-top: clamp(1.75rem, 3.5vw, 2.75rem); }
+  .mt-sm { margin-top: 1rem; }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  /* Below 1000 px the text runs the full width of the band, so the side scrim is replaced by
+     a dense bottom-to-top one, the same move the home hero makes on a phone. */
+  @media (max-width: 1000px) {
+    .feature__bg::after { background: linear-gradient(to top, rgba(21,25,28,.96) 15%, rgba(21,25,28,.9) 100%); }
+  }
+  .feature__text { max-width: 62ch; }
+  /* The tick is drawn from two borders, so it needs no icon set and prints as nothing. */
+  .ticks { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: 0.8rem; max-width: 62ch; }
+  .ticks li { position: relative; padding-left: 1.9rem; margin: 0; }
+  .ticks li::before { content: ''; position: absolute; left: 0; top: 0.42em; width: 1.1rem; height: 0.62rem; border-left: 2.5px solid var(--quantum-green); border-bottom: 2.5px solid var(--quantum-green); transform: rotate(-45deg); }
+
+  /* On paper the band is a plain text block and every revealed block is already in place. */
+  @media print {
+    .feature__bg { display: none !important; }
+    .ticks li::before { border-color: #000; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    .section-head { max-width: none; margin-bottom: 0.5rem; }
+    .section-head__rule { display: none !important; }
+  }
+</style>

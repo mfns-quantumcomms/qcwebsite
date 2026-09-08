@@ -1,0 +1,18 @@
+name: Bronto S70XDT on Scania 8x8
+shortName: 70 m Bronto S70XDT
+unitClass: truck-mounted
+oem: Bronto Skylift
+model: S70XDT
+chassis: Scania P360 CB8x8HHZ
+workingHeight: 70
+outreach: 36
+swlKg: "120 to 700"
+maxWindMs: 12.5
+gvwT: 37.5
+transport: { length: 12.5, width: 2.5, height: 4.25 }
+licence: HR
+status: in-service
+homeDepots: [craigieburn]
+idealFor: [Monopole and lattice tower works to 70 m, Broadcast and microwave installs, Stadium lighting, Wind farm blade inspection]
+order: 2
+meta: { verified: false, source: "Fleet Portfolio 2019 spec sheet. Client to confirm unit still in service", lastVerified: null }

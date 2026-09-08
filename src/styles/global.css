@@ -1,0 +1,410 @@
+/* Quantum Comms design tokens and base styles.
+
+   Implements Brand Guidelines 2026 (Brand Kit v2). See BRAND.md.
+   Colour: Ink and white carry every layout. Quantum Green appears once per page, as the mark,
+   a rule or one highlighted figure, and never as body text on white. Deep Green does the work
+   that needs contrast: buttons, links and small text.
+   Type: Archivo variable, one family, weights 400, 500 and 600 only. Width does the expressive
+   work, from 110 for the wordmark and display down to 85 for tables. */
+
+:root {
+  /* Brand palette */
+  --ink: #15191C;              /* headings, dark bands, the one dark */
+  --quantum-green: #3F9C2F;    /* the mark, a rule, one figure. 5.1:1 on Ink, 3.5:1 on white */
+  --deep-green: #1E6B27;       /* buttons, links, small text on white. 6.6:1 */
+  --deep-green-dark: #17541E;  /* hover of Deep Green */
+  --quantum-green-light: #4FB53B; /* hover of Quantum Green on Ink */
+  --graphite: #3A4248;         /* body text */
+  --steel: #6C767D;            /* secondary text and captions. 4.7:1 on white */
+  /* Steel is 4.2:1 on the Mist ground and 3.8:1 on Concrete, both under AA. Secondary text on
+     those grounds steps to this darker steel, which holds 5.3:1 on Mist and 4.8:1 on Concrete
+     while still reading as the same tone. */
+  --steel-deep: #5C666D;
+  --concrete: #E7E9EB;         /* rules, table headers, quiet fills */
+  --mist: #F3F4F5;             /* page and section ground */
+  --white: #ffffff;
+  --on-ink: #C9CED1;           /* body text reversed out of Ink */
+  --on-ink-quiet: #A9B1B7;     /* captions reversed out of Ink */
+  --rule-on-ink: #2C3134;
+  --safety-orange: #E4600E;    /* HSEQ documents, hazard callouts and site signage only */
+
+  /* Role aliases. Components refer to these, so a palette change happens in one place. */
+  --navy: var(--ink);
+  --charcoal: var(--ink);
+  --green: var(--deep-green);
+  --green-deep: var(--deep-green-dark);
+  --signal: var(--quantum-green);
+  --ink-soft: var(--graphite);
+  --concrete-2: var(--concrete);
+  --line: var(--concrete);
+  --warning: var(--safety-orange);
+  --danger: #b91c1c;           /* form validation only, not a brand colour */
+  --success: var(--deep-green);
+
+  /* One family, both axes. Arial is the Office fallback named by the kit. */
+  --font-display: 'Archivo Variable', Archivo, Arial, Helvetica, sans-serif;
+  --font-body: var(--font-display);
+
+  /* Width axis, per kit section 05. */
+  --wdth-display: 110%;
+  --wdth-h1: 105%;
+  --wdth-normal: 100%;
+  --wdth-table: 85%;
+
+  /* type scale, px: 13 / 14 / 15 / 16 / 18 / 22 / 28 / 36 / 48 / 64.
+     Floors: body never below 16 px, secondary text never below 14 px, nothing below 12 px.
+     --fs-dense is the compact UI size (tables, spec lists, buttons, notices); it returns
+     to full body size on small screens, where 15 px is too small to read on a phone. */
+  --fs-eyebrow: 0.8125rem;
+  --fs-caption: 0.875rem;
+  --fs-dense: 0.95rem;
+  --fs-body: 1rem;
+  --fs-lead: 1.125rem;
+  --fs-h4: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --fs-h3: clamp(1.5rem, 1.35rem + 0.7vw, 1.95rem);
+  --fs-h2: clamp(1.9rem, 1.45rem + 2.1vw, 3rem);
+  --fs-h1: clamp(2.25rem, 1.6rem + 3.1vw, 3.9rem);
+  --fs-hero: clamp(2.6rem, 1.6rem + 5.2vw, 5.75rem);
+
+  --measure: 68ch;
+  --container: 1280px;
+  --container-wide: 1480px;
+  --gutter: clamp(1rem, 2.5vw, 2rem);
+  /* Notched phones: the gutter never falls inside the rounded corner or the camera cut-out. */
+  --gutter-left: calc(var(--gutter) + env(safe-area-inset-left, 0px));
+  --gutter-right: calc(var(--gutter) + env(safe-area-inset-right, 0px));
+  --radius: 6px;
+  --radius-lg: 10px;
+  --shadow: 0 1px 2px rgba(21, 25, 28, 0.06), 0 10px 30px -18px rgba(21, 25, 28, 0.35);
+  --focus: 0 0 0 3px var(--white), 0 0 0 5px var(--deep-green);
+}
+
+/* Small screens: the compact size steps up so no reading text sits below 16 px. */
+@media (max-width: 640px) {
+  :root { --fs-dense: 1rem; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+body {
+  margin: 0;
+  background: var(--mist);
+  color: var(--graphite);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  font-stretch: var(--wdth-normal);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+
+/* Safety net, not a substitute for fixing the cause: the page itself never scrolls sideways.
+   Wide content scrolls inside its own .table-wrap or figure. Set on the root only, so the
+   vertical scrollport and any sticky positioning are left alone. */
+html { overflow-x: hidden; }
+body, body > *, main { min-width: 0; }
+
+/* Long unbroken strings: addresses, emails, reference codes, file names. */
+a[href^="mailto:"], a[href^="tel:"], address, code, kbd, samp, .break-anywhere { overflow-wrap: anywhere; }
+
+img, svg, video, iframe { max-width: 100%; }
+img, svg, video { height: auto; display: block; }
+
+/* Headings: Ink, sentence case, weights 500 and 600 only, width narrowing as size drops. */
+h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); margin: 0 0 0.5em; text-wrap: balance; overflow-wrap: break-word; }
+h1 { font-size: var(--fs-h1); font-weight: 600; font-stretch: var(--wdth-h1); line-height: 1.08; letter-spacing: -0.03em; }
+h2 { font-size: var(--fs-h2); font-weight: 600; font-stretch: var(--wdth-normal); line-height: 1.18; letter-spacing: -0.02em; }
+h3 { font-size: var(--fs-h3); font-weight: 500; font-stretch: var(--wdth-normal); line-height: 1.25; letter-spacing: -0.01em; }
+h4 { font-size: var(--fs-h4); font-weight: 500; font-stretch: var(--wdth-normal); line-height: 1.3; letter-spacing: -0.01em; }
+p { margin: 0 0 1em; max-width: var(--measure); }
+ul, ol { margin: 0 0 1em; padding-left: 1.25rem; max-width: var(--measure); }
+li { margin-bottom: 0.35em; }
+a { color: var(--deep-green); text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
+a:hover { color: var(--deep-green-dark); }
+:focus-visible { outline: none; box-shadow: var(--focus); border-radius: 3px; }
+strong { font-weight: 600; color: var(--ink); }
+small, .caption { font-size: var(--fs-caption); color: var(--steel); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+
+/* Tables take the condensed width, per kit section 05. */
+table { border-collapse: collapse; width: 100%; font-size: var(--fs-dense); font-stretch: var(--wdth-table); font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: break-word; }
+caption { caption-side: top; text-align: left; font-family: var(--font-display); font-weight: 600; font-stretch: var(--wdth-normal); font-size: var(--fs-dense); color: var(--ink); padding: 0.7rem 0.75rem; background: var(--white); border-bottom: 1px solid var(--line); }
+/* Column headers are labels, so they take the small uppercase treatment. Row headers carry
+   real content (a unit name, a spec label), so they stay at reading size and sentence case. */
+thead th, th[scope="col"] { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-eyebrow); letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); background: var(--concrete); }
+tbody th, th[scope="row"] { font-family: var(--font-display); font-weight: 600; color: var(--ink); }
+/* Wide tables scroll inside this box. It is focusable in the markup so it can be reached by keyboard. */
+.table-wrap { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); color: var(--graphite); }
+.table-wrap a, .section--dark .table-wrap a, .section--charcoal .table-wrap a { color: var(--deep-green); }
+
+/* layout */
+/* Same content width as before (max 1200 px with a gutter each side), but built from padding
+   so the gutter can absorb the safe-area inset on a notched phone. */
+.container { width: 100%; max-width: calc(var(--container) + var(--gutter-left) + var(--gutter-right)); margin-inline: auto; padding-inline: var(--gutter-left) var(--gutter-right); min-width: 0; }
+.section { padding-block: clamp(3.5rem, 7vw, 7.5rem); }
+.section--tight { padding-block: clamp(2.25rem, 4vw, 4rem); }
+.section--dark, .section--charcoal { background: var(--ink); color: var(--on-ink); }
+.section--dark h1, .section--dark h2, .section--dark h3, .section--dark h4,
+.section--charcoal h1, .section--charcoal h2, .section--charcoal h3, .section--charcoal h4 { color: var(--white); }
+.section--dark p, .section--dark li, .section--charcoal p, .section--charcoal li { color: var(--on-ink); }
+.section--dark strong, .section--charcoal strong { color: var(--white); }
+.section--dark a, .section--charcoal a { color: var(--quantum-green); }
+.section--dark a:hover, .section--charcoal a:hover { color: var(--quantum-green-light); }
+.section--dark small, .section--dark .caption, .section--charcoal small, .section--charcoal .caption { color: var(--on-ink-quiet); }
+.section--white { background: var(--white); }
+.section--mist { background: var(--mist); }
+
+/* Labels: Archivo 500, wide tracking, Deep Green on light and Quantum Green on Ink. */
+.eyebrow { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; font-stretch: var(--wdth-normal); letter-spacing: 0.14em; text-transform: uppercase; color: var(--deep-green); margin: 0 0 0.75rem; }
+.section--dark .eyebrow, .section--charcoal .eyebrow { color: var(--quantum-green); }
+.lead { font-size: var(--fs-lead); color: var(--graphite); max-width: var(--measure); }
+.section--dark .lead, .section--charcoal .lead { color: var(--on-ink); }
+.prose > * + * { margin-top: 1em; }
+.prose h2 { margin-top: 2em; }
+.prose h3 { margin-top: 1.6em; font-size: var(--fs-h4); }
+
+/* Grids are auto-fit with a min() floor, so a single column is always reachable: the track
+   never demands more than the space it has. At 320 px (288 px of content) all three are one column. */
+.grid { display: grid; gap: clamp(1rem, 2vw, 1.5rem); }
+.grid--2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.grid--4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+/* Grid and flex children may shrink below their content width; without this a long word,
+   a table or a figure inside one of them widens the whole page. */
+.grid > *, .split > *, .btn-row > *, .card > *, .stat, .proof > li { min-width: 0; }
+.split { display: grid; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+@media (min-width: 860px) { .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .split--wide-text { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } }
+
+/* The 45 degree cut: the tail of the Q, once per layout, always top-right.
+   The cut equals the mark height at that size, so it scales with the layout. */
+.cut { --cut-size: clamp(28px, 5.5vw, 64px); clip-path: polygon(0 0, calc(100% - var(--cut-size)) 0, 100% var(--cut-size), 100% 100%, 0 100%); border-radius: 0; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 44px; max-width: 100%; padding: 0.65rem 1.2rem; border-radius: var(--radius); font-family: var(--font-display); font-weight: 500; font-stretch: var(--wdth-normal); font-size: var(--fs-dense); text-decoration: none; border: 2px solid transparent; cursor: pointer; line-height: 1.2; text-align: center; overflow-wrap: break-word; transition: background-color .15s, color .15s, border-color .15s; }
+.btn--primary { background: var(--deep-green); color: var(--white); }
+.btn--primary:hover { background: var(--deep-green-dark); color: var(--white); }
+.btn--secondary { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn--secondary:hover { background: var(--ink); color: var(--white); }
+.btn--ghost { background: transparent; color: var(--deep-green); padding-inline: 0.4rem; }
+.section--dark .btn--primary, .section--charcoal .btn--primary { background: var(--quantum-green); color: var(--ink); }
+.section--dark .btn--primary:hover, .section--charcoal .btn--primary:hover { background: var(--quantum-green-light); color: var(--ink); }
+.section--dark .btn--secondary, .section--charcoal .btn--secondary { color: var(--white); border-color: rgba(255,255,255,.7); }
+.section--dark .btn--secondary:hover, .section--charcoal .btn--secondary:hover { background: var(--white); color: var(--ink); }
+.btn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+
+/* cards */
+.card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(1.15rem, 3.5vw, 1.75rem); display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+.card h3 { font-size: var(--fs-h4); margin: 0; }
+.card p { margin: 0; }
+.card--link { text-decoration: none; color: inherit; transition: border-color .15s, transform .15s; }
+.card--link:hover { border-color: var(--ink); color: inherit; }
+.card__cta { margin-top: auto; font-family: var(--font-display); font-weight: 600; color: var(--deep-green); }
+
+/* Full-bleed band: breaks the container so a photograph or a dark panel runs edge to edge,
+   which is what gives a corporate page its sense of scale. */
+.bleed { width: 100%; margin-inline: 0; }
+.container--wide { max-width: calc(var(--container-wide) + var(--gutter-left) + var(--gutter-right)); }
+
+/* Media card: the photograph carries the card. No border, no shadow, a rule under the label,
+   and a slow zoom on hover. Used for services, fleet classes, locations and projects. */
+.media-card { position: relative; display: flex; flex-direction: column; min-width: 0; text-decoration: none; color: inherit; background: none; border: 0; padding: 0; gap: 0; }
+.media-card__media { position: relative; overflow: hidden; background: var(--concrete); aspect-ratio: 4 / 3; }
+.media-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2,.6,.2,1); }
+.media-card:hover .media-card__media img { transform: scale(1.045); }
+.media-card__body { padding: 1.15rem 0 0; display: flex; flex-direction: column; gap: 0.5rem; border-top: 2px solid var(--ink); margin-top: 1.15rem; }
+.media-card__label { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); }
+.media-card__title { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h4); line-height: 1.18; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
+.media-card:hover .media-card__title { color: var(--deep-green); }
+.media-card p { margin: 0; color: var(--graphite); }
+.section--dark .media-card__title, .section--charcoal .media-card__title { color: var(--white); }
+.section--dark .media-card__body, .section--charcoal .media-card__body { border-top-color: var(--quantum-green); }
+.section--dark .media-card p, .section--charcoal .media-card p { color: var(--on-ink); }
+.section--dark .media-card__label, .section--charcoal .media-card__label { color: var(--on-ink-quiet); }
+
+/* Arrow link: the corporate "next step" affordance. The arrow moves, the text does not. */
+.arrow-link { display: inline-flex; align-items: center; gap: 0.6rem; min-height: 44px; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-dense); text-decoration: none; color: var(--deep-green); }
+.arrow-link::after { content: ''; width: 1.35rem; height: 1.35rem; flex: 0 0 auto; background: currentColor; transition: transform .25s ease; -webkit-mask: var(--arrow) center / contain no-repeat; mask: var(--arrow) center / contain no-repeat; }
+.arrow-link:hover::after { transform: translateX(4px); }
+.section--dark .arrow-link, .section--charcoal .arrow-link { color: var(--quantum-green); }
+:root { --arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12h13M12 5l7 7-7 7' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+/* Stat band: a few large figures with short labels, the pattern every peer uses to state scale.
+   Figures only ever come from the register, so an unverified number never appears here. */
+.statband { list-style: none; margin: 0; padding: 0; max-width: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: clamp(1.5rem, 3vw, 2.5rem); align-items: start; }
+.statband > li { margin: 0; display: flex; flex-direction: column; }
+.statband > * { min-width: 0; }
+.statband__n { display: block; font-family: var(--font-display); font-weight: 600; font-stretch: var(--wdth-display); font-size: clamp(2.4rem, 1.6rem + 3.2vw, 4rem); line-height: 1; letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.statband__n--text { font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem); letter-spacing: -0.02em; line-height: 1.1; }
+.statband__l { display: block; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--concrete); font-size: var(--fs-caption); color: var(--steel); }
+.section--dark .statband__n, .section--charcoal .statband__n { color: var(--white); }
+.section--dark .statband__l, .section--charcoal .statband__l { color: var(--on-ink-quiet); border-top-color: var(--rule-on-ink); }
+
+/* Section head: a rule, an eyebrow, the statement, and the lead.
+   On a wide screen it becomes a two column editorial split, statement left and lead right, so
+   the row is used rather than leaving two thirds of the page empty beside a narrow column.
+   The markup stays a flat stack, so a heading without a lead simply spans the full width. */
+.section-head { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: clamp(2rem, 4vw, 3.5rem); max-width: 46ch; }
+.section-head--wide { max-width: 62ch; }
+.section-head__rule { width: 88px; height: 4px; background: var(--quantum-green); margin-bottom: 1.25rem; }
+
+@media (min-width: 900px) {
+  .section-head, .section-head--wide {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    column-gap: clamp(2.5rem, 5vw, 5.5rem);
+    align-items: start;
+    max-width: none;
+  }
+  .section-head > * { grid-column: 1; }
+  .section-head > h2 { margin-bottom: 0; max-width: 17ch; }
+  /* The lead sits in the second column, level with the statement it belongs to. */
+  .section-head > .lead { grid-column: 2; grid-row: 3; margin: 0; max-width: 46ch; }
+  /* A head with no lead, or with the lead as the only body, uses the whole row. */
+  .section-head > h2:last-child { grid-column: 1 / -1; max-width: 24ch; }
+  .section-head--centre { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
+  .section-head--centre > .lead { grid-column: 1; grid-row: auto; }
+}
+
+/* Long-form article layout. A single measure column of prose in a 1600 px row leaves most of
+   the row empty, so the article keeps its reading measure and a sticky rail carries the
+   contents, the key facts or the next step beside it. */
+.article { display: grid; gap: clamp(1.75rem, 4vw, 3.5rem); grid-template-columns: minmax(0, 1fr); align-items: start; }
+.article > * { min-width: 0; }
+@media (min-width: 1000px) {
+  .article { grid-template-columns: minmax(0, 1fr) minmax(0, 20rem); column-gap: clamp(2.5rem, 5vw, 5rem); }
+  .article__rail { position: sticky; top: calc(var(--header-h, 84px) + 1.5rem); }
+}
+.article__rail { display: flex; flex-direction: column; gap: 1.25rem; }
+.article__rail .card { padding: 1.25rem 1.4rem; }
+.article__rail h3 { font-size: 1.05rem; margin: 0 0 0.5rem; }
+.article__rail ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.article__rail li { margin: 0; font-size: var(--fs-dense); }
+
+/* Scroll reveal. The page is fully legible with no JavaScript and with reduced motion:
+   the resting state is visible, and only the transition is added. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.6,.2,1); }
+  .reveal.is-in, .no-js .reveal { opacity: 1; transform: none; }
+}
+
+/* chips */
+.chip { display: inline-block; font-family: var(--font-display); font-size: 0.75rem; font-weight: 500; font-stretch: var(--wdth-normal); letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 4px; background: var(--concrete); color: var(--graphite); white-space: nowrap; }
+.chip--green { background: #E3F0E0; color: var(--deep-green-dark); }
+.chip--warn { background: #FBE7D6; color: #8A3B08; }
+.chip--navy { background: var(--ink); color: var(--white); }
+
+/* stat: the one place a figure may take Quantum Green, and only on Ink */
+.stat { display: flex; flex-direction: column; gap: 0.2rem; }
+.stat__n { font-family: var(--font-display); font-weight: 600; font-stretch: var(--wdth-display); font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem); line-height: 1; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.stat__l { font-size: var(--fs-caption); color: var(--steel); }
+.section--dark .stat__n, .section--charcoal .stat__n { color: var(--quantum-green); }
+.section--dark .stat__l, .section--charcoal .stat__l { color: var(--on-ink-quiet); }
+
+/* spec list */
+.spec { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr); gap: 0.35rem 1.25rem; font-size: var(--fs-dense); }
+.spec dt { color: var(--steel); }
+.spec dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
+/* Below about 520 px two columns leave the value nothing to sit in, so the pair stacks. */
+@media (max-width: 520px) {
+  .spec { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .spec dt { margin-top: 0.7rem; }
+  .spec dt:first-child { margin-top: 0; }
+}
+
+/* forms */
+.field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+.field label { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-dense); color: var(--ink); }
+.field .hint { font-size: var(--fs-caption); color: var(--steel); }
+.field input, .field select, .field textarea { font: inherit; font-size: 1rem; font-stretch: var(--wdth-normal); padding: 0.7rem 0.85rem; border: 1.5px solid var(--steel); border-radius: var(--radius); background: var(--white); color: var(--ink); min-height: 44px; width: 100%; }
+.field textarea { min-height: 140px; resize: vertical; }
+.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { border-color: var(--deep-green); box-shadow: 0 0 0 3px rgba(30, 107, 39, .25); }
+.field--check { flex-direction: row; align-items: flex-start; gap: 0.6rem; }
+/* The box itself is a 24 px target; the label beside it is clickable too, so the pair is comfortable. */
+.field--check input { width: 1.5rem; height: 1.5rem; min-width: 1.5rem; min-height: 1.5rem; flex: 0 0 auto; margin-top: 0.15rem; }
+.field--check label { font-weight: 400; font-family: var(--font-body); color: var(--graphite); }
+.form-note { font-size: var(--fs-caption); color: var(--steel); }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+/* The Turnstile widget is a fixed 300 px iframe. Below that it scrolls in its own box
+   rather than pushing the page sideways. */
+.cf-turnstile { max-width: 100%; overflow-x: auto; margin-bottom: 1rem; }
+
+/* A link that is the entire content of its block is a standalone target, not a run of text:
+   a "read more", a cross-reference, a URL in a specification list. WCAG 2.5.8 sets 24 px. */
+p > a:only-child, li > a:only-child, dd > a:only-child, figcaption > a:only-child {
+  display: inline-flex; align-items: center; min-height: 24px;
+}
+
+/* A link that is the whole content of a table cell is a target, not a run of text. WCAG 2.5.8
+   sets the minimum at 24 px, which this meets without inflating every table row. */
+td > a, th > a { display: inline-flex; align-items: center; min-height: 24px; }
+
+/* Contact links that stand on their own line are tap targets, not inline text. A phone number
+   in an address block or a specification list is tapped on site, often with gloves on. */
+address a[href^="tel:"], address a[href^="mailto:"],
+.spec dd > a[href^="tel:"], .spec dd > a[href^="mailto:"],
+.card > p > a[href^="tel:"], .card > p > a[href^="mailto:"] {
+  display: inline-flex; align-items: center; min-height: 44px;
+}
+
+/* Secondary text keeps AA on the tinted grounds. Content inside a white card is unaffected,
+   because Steel already clears 4.5:1 on white. */
+.section--mist :is(.caption, small, .text-steel, .statband__l, .form-note, .hint, figcaption, .spec dt):not(.card *):not(.table-wrap *),
+.section--tight.section--mist :is(.caption, small, .text-steel):not(.card *),
+thead th, th[scope="col"] { color: var(--steel-deep); }
+
+/* utilities */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: max(1rem, env(safe-area-inset-left, 0px)); top: -100px; z-index: 100; background: var(--ink); color: var(--white); padding: 0.6rem 1rem; border-radius: var(--radius); font-family: var(--font-display); font-weight: 600; }
+.skip-link:focus { top: 1rem; }
+.mt-0 { margin-top: 0; } .mb-0 { margin-bottom: 0; }
+.text-steel { color: var(--steel); }
+.max-measure { max-width: var(--measure); }
+.center { text-align: center; }
+.center p, .center h2 { margin-inline: auto; }
+.figure { margin: 0; max-width: 100%; min-width: 0; border-radius: var(--radius-lg); overflow: hidden; background: var(--concrete); }
+.figure img { width: 100%; height: 100%; object-fit: cover; }
+.figure--ratio { aspect-ratio: 4 / 3; }
+.figure--wide { aspect-ratio: 16 / 10; }
+.figure figcaption { font-size: var(--fs-caption); color: var(--steel); padding: 0.5rem 0.75rem; background: var(--white); }
+.notice { border-left: 4px solid var(--safety-orange); background: #FDF4EC; padding: 0.9rem 1.1rem; border-radius: 0 var(--radius) var(--radius) 0; font-size: var(--fs-dense); min-width: 0; }
+.notice--info { border-left-color: var(--deep-green); background: #EFF6ED; }
+
+/* print: an A4 document a procurement reader can file */
+@page { size: A4; margin: 15mm; }
+
+@media print {
+  .site-header, .site-footer, .btn, .cta-band, .skip-link, .crumbs, .enquiry, .cf-turnstile { display: none !important; }
+  html { overflow-x: visible; }
+  body { background: #fff; color: #000; font-size: 11pt; display: block; }
+  a { color: #000; text-decoration: none; }
+  /* The page margin is the gutter on paper. */
+  .container { width: auto; max-width: none; padding-inline: 0; }
+  .section { padding-block: 0.85rem; }
+  .section--white, .section--dark, .section--charcoal, .section--mist { background: #fff; color: #000; }
+  .section--dark h1, .section--dark h2, .section--dark h3, .section--dark h4,
+  .section--dark p, .section--dark li, .section--dark a, .section--dark .lead,
+  .section--dark small, .section--dark .caption, .section--dark .eyebrow, .section--dark .stat__n,
+  .section--charcoal h1, .section--charcoal h2, .section--charcoal h3, .section--charcoal h4,
+  .section--charcoal p, .section--charcoal li, .section--charcoal a, .section--charcoal .lead,
+  .section--charcoal small, .section--charcoal .caption, .section--charcoal .eyebrow, .section--charcoal .stat__n { color: #000; }
+  h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+  p, li, figure, tr, .card, .notice, .stat, .spec { break-inside: avoid; page-break-inside: avoid; }
+  /* Tables print in full rather than scrolling, and repeat their head on every page. */
+  .table-wrap { overflow: visible !important; border-color: #999; box-shadow: none; }
+  table { font-size: 9.5pt; }
+  thead { display: table-header-group; }
+  th, td { border-bottom: 1px solid #bbb; }
+  thead th, th[scope="col"] { background: #eee; color: #000; }
+  .card { box-shadow: none; border-color: #bbb; break-inside: avoid; }
+  .chip { background: none !important; color: #000 !important; border: 1px solid #999; }
+  .grid--3, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .figure--ratio, .figure--wide { aspect-ratio: auto; }
+  /* The cut is a brand device, not information: paper gets a clean rectangle. */
+  .cut { clip-path: none; }
+  img { max-height: 9cm; object-fit: contain; }
+}

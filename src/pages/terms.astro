@@ -1,0 +1,121 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { company, currentYear } from '@data/company';
+
+const description = 'Terms for using the Quantum Comms website: accuracy of fleet and service information, intellectual property, third-party links, liability and governing law.';
+const sections = [
+  { id: 'about', title: 'These terms' },
+  { id: 'information', title: 'Information on this site' },
+  { id: 'reliance', title: 'No reliance and no advice' },
+  { id: 'quotes', title: 'Quotes, hire and services' },
+  { id: 'ip', title: 'Intellectual property' },
+  { id: 'links', title: 'Links to other sites' },
+  { id: 'use', title: 'Acceptable use' },
+  { id: 'liability', title: 'Liability and the Australian Consumer Law' },
+  { id: 'law', title: 'Governing law' },
+  { id: 'changes', title: 'Changes to these terms' },
+];
+---
+<Base title="Website terms" description={description}>
+  <Hero variant="page" eyebrow="Legal" title="Website terms of use" lead="The conditions on which we publish this site, what you can rely on, and what you can do with the content.">
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Website terms' }]} />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container legal">
+      <nav class="toc reveal" aria-labelledby="toc-h">
+        <div class="section-head__rule" aria-hidden="true"></div>
+        <h2 class="toc__h" id="toc-h">On this page</h2>
+        <ol>{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ol>
+      </nav>
+
+      <article class="prose legal__body">
+        <p class="notice" role="note"><strong>Draft for legal review.</strong> These terms are a starting point prepared for {company.legalName} and have not yet been reviewed by a lawyer. They should not be treated as final until that review is complete and the last-updated date at the end is set.</p>
+
+        <h2 id="about">These terms</h2>
+        <p>These terms apply to your use of the website at {company.siteUrl}, operated by {company.legalName} (ABN {company.abn}). By using the site you accept them. If you do not accept them, please do not use the site.</p>
+        <p>Our <a href="/privacy/">privacy policy</a> forms part of these terms. Hire of equipment is governed by our <a href="/hire-terms/">hire terms</a> and your signed hire agreement, not by this page.</p>
+
+        <h2 id="information">Information on this site</h2>
+        <p>We take care to keep the site accurate. Fleet specifications come from manufacturer specification sheets and our own fleet register, and each unit page states whether the unit is in service, on order or still to be confirmed. Depot listings show confirmed locations only. Certifications, inductions and training are listed as they stood when the page was published.</p>
+        <p>Things change. Units are sold, upgraded or taken off the road for service, certificates are renewed or re-scoped, and depots move. We may change, add or remove any content without notice, and we do not promise that the site is complete, current or free of errors at any given time.</p>
+
+        <h2 id="reliance">No reliance and no advice</h2>
+        <p>The content is general information to support procurement, planning and due diligence. It is not engineering, safety, legal or financial advice, and it does not replace a site-specific assessment.</p>
+        <p>Working height, outreach and safe working load figures are maximums under the manufacturer's stated conditions. What a unit can achieve on your site depends on ground bearing, jacking configuration, wind, load and access. Confirm the unit, configuration and availability with us in writing before you rely on a figure in a lift plan, tender or programme.</p>
+
+        <h2 id="quotes">Quotes, hire and services</h2>
+        <p>Nothing on the site is an offer to supply. Quotes are prepared for a named site, scope and dates, are subject to availability, and are governed by the hire terms or the contract under which we are engaged. A hire or works agreement exists only once both parties have signed or accepted it in writing.</p>
+        <p>Where we are engaged through a supplier panel, subcontract or purchase order, the terms of that engagement prevail over anything on this site.</p>
+
+        <h2 id="ip">Intellectual property</h2>
+        <p>The text, photographs, fleet register, capability statement, page layouts and the {company.tradingName} name and logo are owned by {company.legalName} or used under licence, and are protected by copyright and trade mark law.</p>
+        <p>You may view, download and print pages for your own procurement, due diligence or internal use, and quote short extracts with attribution to us. You may not otherwise copy, republish, scrape, frame or use the content commercially without our written permission.</p>
+        <p>Carrier, utility and manufacturer names on the site belong to their owners and are used only to describe the work we do and the equipment we run. Their use does not imply endorsement.</p>
+
+        <h2 id="links">Links to other sites</h2>
+        <p>The site links to third-party sites such as Google Maps, LinkedIn, Instagram, regulators and standards bodies. Those links are provided for convenience. We do not control the linked sites, do not endorse their content, and are not responsible for their accuracy, availability or privacy practices. External links open in a new tab.</p>
+
+        <h2 id="use">Acceptable use</h2>
+        <p>When you use the site you must not:</p>
+        <ul>
+          <li>interfere with its operation or security, or try to gain access to systems behind it</li>
+          <li>use automated tools to bulk-extract content or to submit the enquiry form</li>
+          <li>submit false, misleading or offensive information, or use the form to send unsolicited advertising</li>
+          <li>send the form's processing endpoint anything other than a submission from the form itself</li>
+          <li>use the site for any unlawful purpose</li>
+        </ul>
+        <p>We may block access or discard submissions where we reasonably believe these rules are being broken.</p>
+
+        <h2 id="liability">Liability and the Australian Consumer Law</h2>
+        <p>Nothing in these terms excludes, restricts or modifies any consumer guarantee, right or remedy under the Australian Consumer Law (Schedule 2 of the Competition and Consumer Act 2010 (Cth)) or any other law that cannot lawfully be excluded.</p>
+        <p>To the extent the law permits, we exclude all liability for loss or damage, including indirect and consequential loss, loss of profit and delay costs, arising from your use of the site or your reliance on its content, whether in contract, tort (including negligence), statute or otherwise.</p>
+        <p>Where our liability cannot be excluded but can be limited, it is limited, at our option, to supplying the relevant services again or paying the cost of having them supplied again.</p>
+        <p>Nothing in these terms limits our liability for fraud, or for death or personal injury caused by our negligence.</p>
+
+        <h2 id="law">Governing law</h2>
+        <p>These terms are governed by the laws of Victoria, Australia. You and we submit to the non-exclusive jurisdiction of the courts of Victoria and the courts that hear appeals from them.</p>
+
+        <h2 id="changes">Changes to these terms</h2>
+        <p>We may update these terms from time to time. The current version is always at this address. Using the site after a change means you accept the changed terms.</p>
+
+        <p class="caption updated">Last updated: {currentYear} draft. The date will be set when the reviewed version is approved.</p>
+      </article>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Checking a figure before you rely on it?"
+    text="Published working heights, outreach and safe working loads are maximums under the manufacturer's stated conditions. Confirm the unit and configuration with a depot in writing before it goes into a lift plan or a tender."
+    primary={{ label: 'Contact a depot', href: '/contact/' }}
+    secondary={{ label: 'Fleet register', href: '/fleet/' }}
+  />
+</Base>
+
+<style>
+  /* A legal document, set like one: a numbered contents column that stays with the reader,
+     and clauses separated by a rule rather than by white space alone. */
+  .legal { display: grid; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+  .legal > * { min-width: 0; }
+  @media (min-width: 900px) { .legal { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); } .toc { position: sticky; top: 1.5rem; } }
+
+  .toc .section-head__rule { margin-bottom: 1.25rem; }
+  .toc__h { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); margin: 0 0 0.5rem; }
+  .toc ol { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: clause; }
+  .toc li { margin: 0; counter-increment: clause; }
+  .toc a { display: flex; align-items: center; gap: 0.85rem; min-height: 44px; padding: 0.55rem 0; border-top: 1px solid var(--concrete); font-family: var(--font-display); font-size: var(--fs-dense); line-height: 1.3; color: var(--ink); text-decoration: none; }
+  .toc a::before { content: counter(clause, decimal-leading-zero); flex: 0 0 auto; font-size: var(--fs-eyebrow); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; color: var(--steel); }
+  .toc li:last-child a { border-bottom: 1px solid var(--concrete); }
+  .toc a:hover, .toc a:hover::before { color: var(--deep-green); }
+
+  /* Legal prose carries long URLs and email addresses; they wrap rather than overflow. */
+  .legal__body { overflow-wrap: anywhere; }
+  .legal__body h2 { scroll-margin-top: 1.5rem; font-size: var(--fs-h3); margin-top: clamp(2.5rem, 5vw, 3.75rem); padding-top: clamp(1.25rem, 2.5vw, 1.75rem); border-top: 1px solid var(--concrete); }
+  .legal__body h3 { margin-top: 1.9em; color: var(--ink); }
+  .legal__body > :first-child { margin-top: 0; }
+  .legal__body ul { margin-top: 1em; }
+  .updated { margin-top: clamp(2.5rem, 5vw, 3.5rem); padding-top: 1rem; border-top: 1px solid var(--concrete); }
+</style>

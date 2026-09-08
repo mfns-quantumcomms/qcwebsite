@@ -1,0 +1,92 @@
+---
+// Archivo variable, both axes. One family for the whole brand, per Brand Guidelines 2026
+// section 05: width does the expressive work, weights limited to 400, 500 and 600.
+import '@fontsource-variable/archivo/standard.css';
+import '../styles/global.css';
+import Header from '@components/Header.astro';
+import Footer from '@components/Footer.astro';
+import { company, certifications } from '@data/company';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  bodyClass?: string;
+}
+const { title, description, canonical, ogImage = '/og-default.jpg', noindex = false, jsonLd, bodyClass = '' } = Astro.props;
+const fullTitle = title === company.tradingName ? `${company.tradingName} · ${company.descriptor}` : `${title} · ${company.tradingName}`;
+const url = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
+const orgLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': `${company.siteUrl}/#organization`,
+  name: company.tradingName,
+  legalName: company.legalName,
+  alternateName: company.formerName,
+  url: company.siteUrl,
+  logo: `${company.siteUrl}/logo.svg`,
+  foundingDate: String(company.foundedYear),
+  email: company.email,
+  telephone: company.phoneMain.tel,
+  address: { '@type': 'PostalAddress', streetAddress: company.hqAddress.street, addressLocality: company.hqAddress.suburb, addressRegion: company.hqAddress.state, postalCode: company.hqAddress.postcode, addressCountry: 'AU' },
+  sameAs: [company.social.linkedin, company.social.instagram],
+  identifier: [{ '@type': 'PropertyValue', propertyID: 'ABN', value: company.abn }],
+  hasCredential: certifications.map((c) => ({ '@type': 'EducationalOccupationalCredential', credentialCategory: 'certification', name: c.standard })),
+};
+const ldBlocks = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])];
+---
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={url} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <meta name="theme-color" content="#15191C" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={company.tradingName} />
+    <meta property="og:locale" content="en_AU" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={url} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {ldBlocks.map((b) => <script is:inline type="application/ld+json" set:html={JSON.stringify(b)} />)}
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <script>
+      // Scroll reveal. Sections are visible by default and this only adds the transition,
+      // so the page reads correctly with no JavaScript and with reduced motion.
+      const items = document.querySelectorAll('.reveal');
+      if (items.length && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const io = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+          }
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+        items.forEach((el) => io.observe(el));
+      } else {
+        items.forEach((el) => el.classList.add('is-in'));
+      }
+    </script>
+    <Header />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+<style is:global>
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  main { flex: 1; }
+</style>

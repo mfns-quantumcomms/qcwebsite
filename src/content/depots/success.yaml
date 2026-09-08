@@ -1,0 +1,12 @@
+name: Success depot
+role: Depot
+state: WA
+street: 1 Amadeus Way
+suburb: Success
+postcode: "6164"
+timezone: Australia/Perth
+confirmed: false
+geo: { lat: -32.130888, lng: 115.84461 }
+capabilities: [Truck-mounted EWP fleet]
+order: 6
+meta: { verified: false, source: "Site footer only; not in Capability Statement or LinkedIn. Client to confirm", lastVerified: null }

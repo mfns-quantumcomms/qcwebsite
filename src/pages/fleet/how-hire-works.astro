@@ -1,0 +1,227 @@
+---
+/**
+ * How hire works. Wet versus dry hire, operator credentials from company.training,
+ * inspections and prestarts, and the dry-hire conditions from the rate card stated as
+ * conditions only. No rates, durations or dollar figures are typed on this page.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import EnquiryForm from '@components/EnquiryForm.astro';
+import { Image } from 'astro:assets';
+import { photos, alts } from '@data/images';
+import { training } from '@data/company';
+
+const description =
+  'How EWP hire works at Quantum Comms: wet hire with our operator or dry hire with yours, operator credentials, prestarts, minimum terms and dilapidation reports.';
+---
+<Base title="How hire works" description={description}>
+  <Hero
+    variant="photo"
+    eyebrow="Fleet and hire"
+    title="How hire works"
+    lead="The two hire models, what arrives with the unit, what we need from you, and the conditions that apply before a platform leaves the yard."
+    image={photos.truckUnitDepot}
+    imageAlt={alts.truckUnitDepot}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Fleet', href: '/fleet/' }, { label: 'How hire works' }]} />
+    <nav class="jump" aria-label="On this page">
+      <a href="#wet-hire">Wet hire</a>
+      <a href="#dry-hire">Dry hire</a>
+      <a href="#operators">Operators</a>
+      <a href="#inspections">Inspections</a>
+      <a href="#charges">Charges</a>
+      <a href="#enquiry">Enquire</a>
+    </nav>
+  </Hero>
+
+  <section class="section section--white" id="wet-hire">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Wet hire</p>
+        <h2>Wet hire: the unit with our operator</h2>
+      </div>
+      <div class="split split--wide-text reveal">
+        <div>
+          <p>The platform arrives with one of our operators, who sets up, operates and packs down the unit and works to your site supervisor. This is the model most carrier and utility sites use, because the operator is already inducted and the unit is never run by someone unfamiliar with it.</p>
+          <ul>
+            <li>Charged by the hour or the day against the current rate card, with a minimum charge per call-out. A longer minimum applies on weekends and public holidays.</li>
+            <li>The operator can work as part of your crew. Most hold rigging and dogging experience and can assist with lifts from the basket.</li>
+            <li>Suited to defined jobs, sites requiring a carrier-inducted operator, and any work near power lines.</li>
+            <li>Travel to and from site, and overnight allowances for away work, are quoted with the job.</li>
+          </ul>
+        </div>
+        <figure class="figure figure--ratio">
+          <Image src={photos.basketOnMonopole} alt={alts.basketOnMonopole} widths={[500, 900, 1200]} sizes="(min-width: 860px) 45vw, 100vw" />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist" id="dry-hire">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Dry hire</p>
+        <h2>Dry hire: the unit with your operator</h2>
+      </div>
+      <div class="split split--wide-text reveal">
+        <div>
+          <p>You take the platform for a longer term and operate it with your own qualified people. The conditions below come from our hire rate card and apply to every dry hire.</p>
+          <ol class="conditions">
+            <li><strong>Minimum term.</strong> Dry hire is for a minimum period on one unit, then continues month by month. The current minimum is confirmed on quotation.</li>
+            <li><strong>Operator induction on the unit.</strong> Every operator who will use the platform is inducted onto that specific unit before release.</li>
+            <li><strong>Competency course.</strong> Each operator completes a competency course on the unit; its length is stated on the rate card. If an operator is not deemed competent, a replacement operator is required before the platform is released.</li>
+            <li><strong>Dilapidation reports.</strong> A full pre-hire and post-hire dilapidation report is completed on every unit at the start and end of the job, at an advised fee.</li>
+            <li><strong>Vehicle allowance.</strong> Where the unit travels beyond a daily distance threshold, a vehicle allowance applies. The threshold and allowance are on the rate card.</li>
+            <li><strong>Prestarts and logbook.</strong> Your operator completes the daily prestart and keeps the logbook for the term. See inspections below.</li>
+          </ol>
+          <p>Dry hire is priced monthly, on application. Ask for the current rate card with your enquiry.</p>
+        </div>
+        <figure class="figure figure--ratio">
+          <Image src={photos.fleetLineupSunset} alt={alts.fleetLineupSunset} widths={[500, 900, 1200]} sizes="(min-width: 860px) 45vw, 100vw" />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark feature" id="operators">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.riggerOnMonopole} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Operators</p>
+        <h2>What our operators hold</h2>
+        <p class="lead">Every wet-hire operator holds the following as a minimum, as listed in our capability statement. Currency is tracked in the training matrix on the compliance page.</p>
+      </div>
+      <ul class="cred-grid reveal" aria-label="Operator credentials">
+        {training.operatorCredentials.map((c) => <li class="cred">{c}</li>)}
+      </ul>
+      <div class="feature__text reveal">
+        <p>Dry-hire operators need the EWP licence class for the unit, a current construction induction and any induction the site requires. They are inducted onto the unit and assessed before release, as set out above.</p>
+        <a class="arrow-link" href="/compliance/">See the full training matrix and vehicle safety kit</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white" id="inspections">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Inspections</p>
+        <h2>Inspections, prestarts and what arrives with the unit</h2>
+      </div>
+      <div class="grid grid--3 reveal">
+        <div class="card">
+          <h3>Before it leaves the yard</h3>
+          <p>Every unit carries a current logbook and is serviced to the manufacturer's schedule by our own workshop. Periodic inspections are recorded in the logbook and available on request.</p>
+          <a class="arrow-link card__cta" href="/services/service-and-maintenance/">EWP service and maintenance</a>
+        </div>
+        <div class="card">
+          <h3>Every day on site</h3>
+          <p>The operator completes a daily prestart check before the platform is used and records it in the logbook. Rated wind limit, safe working load and ground conditions are checked against the unit's specification and the jacking footprint on its register page.</p>
+        </div>
+        <div class="card">
+          <h3>Fitted for the work</h3>
+          <p>Lifting arms or winches, bog mats for soft ground, extendable baskets on selected units, and narrow or one-sided jacking on the units that list it. Insulated units and electrical spotters are available for work near live lines.</p>
+          <a class="arrow-link card__cta" href="/fleet/">See what each unit lists</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist" id="charges">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Charges</p>
+        <h2>How charges are built up</h2>
+      </div>
+      <div class="split split--wide-text reveal">
+        <div>
+          <p>Figures are on the current rate card, issued with your quote. The structure is the same for every unit:</p>
+          <ul>
+            <li><strong>Hire.</strong> Hourly or daily for wet hire, monthly for dry hire, by unit class and working height.</li>
+            <li><strong>Minimum charge.</strong> A minimum number of hours per call-out on weekdays, and a longer minimum on weekends and public holidays.</li>
+            <li><strong>Overtime.</strong> An overtime rate applies to hours beyond the standard day.</li>
+            <li><strong>Travel.</strong> Travel time to and from site, and an overnight allowance per night when the crew stays away.</li>
+            <li><strong>Extras.</strong> Dilapidation reports on dry hire, a vehicle allowance beyond the daily distance threshold, and any spotter, bog mats or delivery you request.</li>
+            <li><strong>GST.</strong> All rates are quoted exclusive of GST.</li>
+          </ul>
+          <p>The legal conditions of hire, including insurance, damage, cancellation and payment terms, are in the <a href="/hire-terms/">hire terms</a>.</p>
+        </div>
+        <div class="card">
+          <h3>What to send with an enquiry</h3>
+          <ul class="card-list">
+            <li>Site address, access and any approach limits.</li>
+            <li>Dates and expected hours per day, or the dry-hire term.</li>
+            <li>Working height, outreach and basket load.</li>
+            <li>Ground conditions and whether the setup is kerbside or in a compound.</li>
+            <li>Whether the work is near power, and any inductions the site requires.</li>
+            <li>For dry hire, your operators' licence classes.</li>
+          </ul>
+          <a class="arrow-link card__cta" href="#enquiry">Go to the enquiry form</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="enquire-grid reveal">
+        <div>
+          <div class="section-head colhead">
+            <div class="section-head__rule"></div>
+            <p class="eyebrow">Enquire</p>
+            <h2>Book a unit or ask for the rate card</h2>
+          </div>
+          <p>Send the site details and the depot will confirm the unit, operator and travel. If you need the rate card, the hire terms or the capability statement for a procurement file, say so in the message.</p>
+          <p><a href="/fleet/">Browse the fleet register</a> to pick a unit first, or leave it to the depot to match the job.</p>
+        </div>
+        <EnquiryForm topic="hire" heading="Hire enquiry" />
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need the hire terms for your file?"
+    text="Hire terms, the capability statement and the prequalification pack are available for procurement review."
+    primary={{ label: 'Hire terms', href: '/hire-terms/' }}
+    secondary={{ label: 'Fleet register', href: '/fleet/' }}
+  />
+</Base>
+
+<style>
+  .jump { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin-top: 0.75rem; }
+  .jump a { min-height: 44px; display: inline-flex; align-items: center; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-dense); text-decoration: none; color: var(--deep-green); }
+  .jump a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+
+  /* Column heads inside a split need less air than a full section head. */
+  .colhead { margin-bottom: clamp(1.25rem, 2.5vw, 1.75rem); }
+
+  .conditions { padding-left: 1.3rem; }
+  .conditions li { margin-bottom: 0.7rem; }
+  .card-list { margin: 0; padding-left: 1.1rem; }
+  .card__cta { margin-top: auto; align-self: flex-start; }
+  .split > *, .grid > * { min-width: 0; }
+  .enquire-grid { display: grid; gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+  .enquire-grid > * { min-width: 0; }
+  @media (min-width: 960px) { .enquire-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); } }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.9) 42%, rgba(21,25,28,.66) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 62ch; }
+  /* Credentials reversed out of the band: a rule each, no boxes, so the photograph still reads. */
+  .cred-grid { list-style: none; padding: 0; margin: 0 0 2rem; display: grid; gap: 0.9rem clamp(1.5rem, 3vw, 2.5rem); grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); max-width: none; }
+  .cred-grid > * { min-width: 0; }
+  .cred { margin: 0; padding-top: 0.85rem; border-top: 1px solid var(--rule-on-ink); font-family: var(--font-display); font-weight: 500; color: var(--white); }
+</style>

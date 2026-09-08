@@ -1,0 +1,153 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { company, currentYear } from '@data/company';
+
+const description = 'How Quantum Comms collects, uses, stores and discloses personal information from website enquiries, including overseas processing, cookies and complaints.';
+const hq = company.hqAddress;
+const sections = [
+  { id: 'scope', title: 'Who we are and what this covers' },
+  { id: 'collect', title: 'What we collect' },
+  { id: 'purpose', title: 'Why we collect it' },
+  { id: 'storage', title: 'Storage and security' },
+  { id: 'disclosure', title: 'Who we share it with' },
+  { id: 'overseas', title: 'Overseas processing' },
+  { id: 'cookies', title: 'Cookies and analytics' },
+  { id: 'access', title: 'Access and correction' },
+  { id: 'complaints', title: 'Complaints' },
+  { id: 'changes', title: 'Changes to this policy' },
+  { id: 'contact', title: 'Contact' },
+];
+---
+<Base title="Privacy policy" description={description}>
+  <Hero variant="page" eyebrow="Legal" title="Privacy policy" lead="What we collect when you use this website or send us an enquiry, why we collect it, where it goes, and how to see or correct it.">
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Privacy policy' }]} />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container legal">
+      <nav class="toc reveal" aria-labelledby="toc-h">
+        <div class="section-head__rule" aria-hidden="true"></div>
+        <h2 class="toc__h" id="toc-h">On this page</h2>
+        <ol>{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ol>
+      </nav>
+
+      <article class="prose legal__body">
+        <p class="notice" role="note"><strong>Draft for legal review.</strong> This policy is a starting point prepared for {company.legalName} and has not yet been reviewed by a lawyer. It should not be treated as final until that review is complete and the last-updated date at the end is set.</p>
+
+        <h2 id="scope">Who we are and what this covers</h2>
+        <p>{company.legalName} (ABN {company.abn}) operates this website at {company.siteUrl}. This policy explains how we handle personal information collected through the site, consistent with the Privacy Act 1988 (Cth) and the Australian Privacy Principles (APPs).</p>
+        <p>It covers the website and the enquiries you send through it. Personal information we collect while delivering contracted works or hire, such as site access details or operator records, is handled under the relevant contract and our management system procedures.</p>
+        <p class="notice">For legal review: confirm whether {company.tradingName} is an APP entity, either because annual turnover exceeds the small business threshold or because the company has opted in. This draft is written as if the APPs apply in full, which is the position most carrier and tier-one panels expect.</p>
+
+        <h2 id="collect">What we collect</h2>
+        <h3>The enquiry form</h3>
+        <p>When you send an enquiry we collect what you type: your name, organisation, email address, phone number, the topic you chose, your preferred depot and your message. The form also records the page you sent it from and the time you started filling it in. We use those two details only to filter automated spam.</p>
+        <h3>Phone and email</h3>
+        <p>If you call or email us, we keep the details needed to deal with your enquiry, such as your name, contact details and the content of the message or conversation.</p>
+        <h3>Recruitment</h3>
+        <p>If you choose Careers as the topic, anything you include about your licences, tickets, inductions and work history is collected for recruitment purposes.</p>
+        <h3>Technical data</h3>
+        <p>Our hosting and content delivery provider, Cloudflare, records the IP address, browser type and requested pages of each visit in its server logs so it can serve the site securely and detect abuse. We do not use this data to identify you.</p>
+        <h3>Anti-spam check</h3>
+        <p>If the enquiry form shows a Cloudflare Turnstile check, Cloudflare processes signals from your browser to tell people from automated tools. We receive only a pass or fail result.</p>
+        <h3>Sensitive information</h3>
+        <p>We do not ask for sensitive information such as health, ethnicity or union membership. Please do not include it in a message. If you do, we handle it under this policy and delete it once it is no longer needed.</p>
+
+        <h2 id="purpose">Why we collect it</h2>
+        <p>We collect and use personal information to:</p>
+        <ul>
+          <li>respond to your enquiry and any follow-up questions</li>
+          <li>prepare quotes and set up hire or works, including site inductions and access</li>
+          <li>supply prequalification, tender and compliance documents you have asked for</li>
+          <li>assess expressions of interest for work with us</li>
+          <li>keep the business records we are required to keep</li>
+          <li>protect the site and our systems from misuse</li>
+          <li>meet our legal obligations</li>
+        </ul>
+        <p>We do not use your details for marketing unless you have asked us to keep you informed, and you can withdraw that at any time by emailing us.</p>
+
+        <h2 id="storage">Storage and security</h2>
+        <p>Form submissions are not stored in a database on the website. Each submission is sent by email, through a transactional email provider, to the mailbox for its topic. A copy may also be passed to our shared mailbox or customer relationship system so the right person can act on it. Those emails and records sit in our business systems, and access is limited to staff who need it for the purposes above.</p>
+        <p>The site is served over HTTPS with security headers that limit what scripts and content can load. We take reasonable steps to protect personal information from misuse, interference, loss and unauthorised access, and we destroy or de-identify it when it is no longer needed for the purposes above or required as a business record.</p>
+        <p>If a data breach involving your personal information is likely to result in serious harm, we will notify you and the Office of the Australian Information Commissioner under the Notifiable Data Breaches scheme.</p>
+        <p class="notice">For the client: name the email delivery provider configured on the form, the CRM or shared mailbox that receives a copy, and the retention period for enquiries and for recruitment expressions of interest.</p>
+
+        <h2 id="disclosure">Who we share it with</h2>
+        <p>We share personal information only where needed for the purposes above:</p>
+        <ul>
+          <li><strong>Our staff and contractors</strong> who need it to respond to you or deliver the work.</li>
+          <li><strong>Service providers</strong> that run the site and our systems: Cloudflare for hosting, content delivery and anti-spam; the email delivery provider; and our CRM and IT support providers. They may use it only to provide their service to us.</li>
+          <li><strong>Our clients</strong>, where your enquiry relates to a project we are delivering for a carrier, utility or tier-one contractor and the client needs it, for example to arrange site access.</li>
+          <li><strong>Regulators, courts and law enforcement</strong> where the law requires or permits it.</li>
+        </ul>
+        <p>We do not sell personal information or share it with third parties for their own marketing.</p>
+
+        <h2 id="overseas">Overseas processing</h2>
+        <p>Some of our service providers process data outside Australia. Cloudflare serves the site from data centres around the world and may store request logs outside Australia. The email delivery provider and any CRM may also operate from overseas, including the United States.</p>
+        <p>Before we disclose personal information to an overseas recipient we take reasonable steps to ensure it will be handled consistently with the APPs, as APP 8 requires, usually through the provider's contractual terms and published privacy commitments.</p>
+
+        <h2 id="cookies">Cookies and analytics</h2>
+        <p>This site sets no tracking or advertising cookies by default. It does not run analytics, advertising tags or social media pixels.</p>
+        <p>If the anti-spam check is enabled on the enquiry form, Cloudflare may set a strictly necessary cookie or use browser storage to complete the check. That is the only cookie-like storage the site uses.</p>
+        <p>If we enable an analytics tool in future, we will list it here, describe what it collects and how to opt out, before it starts collecting.</p>
+        <p>Links to Google Maps, LinkedIn and Instagram open external sites with their own privacy policies.</p>
+
+        <h2 id="access">Access and correction</h2>
+        <p>You can ask us what personal information we hold about you, and ask us to correct it if it is inaccurate, out of date or incomplete. Email <a href={`mailto:${company.email}`}>{company.email}</a> with "Privacy request" in the subject line. We may need to verify your identity first.</p>
+        <p>We will respond within 30 days. If we refuse a request, we will tell you why in writing and how to complain about the refusal.</p>
+
+        <h2 id="complaints">Complaints</h2>
+        <p>If you think we have handled your personal information in a way that breaches the APPs, email us at the address above and describe what happened. We will acknowledge your complaint promptly, investigate it, and aim to respond within 30 days.</p>
+        <p>If you are not satisfied with our response, you can complain to the Office of the Australian Information Commissioner at <a href="https://www.oaic.gov.au/" rel="noopener" target="_blank">oaic.gov.au<span class="visually-hidden"> (opens in a new tab)</span></a>.</p>
+
+        <h2 id="changes">Changes to this policy</h2>
+        <p>We may update this policy as our systems or the law change. The current version is always at this address, with the last-updated date below.</p>
+
+        <h2 id="contact">Contact</h2>
+        <address class="addr">
+          {company.legalName}<br />
+          {hq.street}, {hq.suburb} {hq.state} {hq.postcode}<br />
+          <a href={`mailto:${company.email}`}>{company.email}</a> · <a href={`tel:${company.phoneMain.tel}`}>{company.phoneMain.display}</a>
+        </address>
+
+        <p class="caption updated">Last updated: {currentYear} draft. The date will be set when the reviewed version is approved.</p>
+      </article>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="A question about your personal information?"
+    text="Email us with Privacy request in the subject line, or send the same question through the enquiry form. The website terms and the hire conditions sit alongside this policy."
+    primary={{ label: 'Contact us', href: '/contact/' }}
+    secondary={{ label: 'Website terms', href: '/terms/' }}
+  />
+</Base>
+
+<style>
+  /* A legal document, set like one: a numbered contents column that stays with the reader,
+     and clauses separated by a rule rather than by white space alone. */
+  .legal { display: grid; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+  .legal > * { min-width: 0; }
+  @media (min-width: 900px) { .legal { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); } .toc { position: sticky; top: 1.5rem; } }
+
+  .toc .section-head__rule { margin-bottom: 1.25rem; }
+  .toc__h { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); margin: 0 0 0.5rem; }
+  .toc ol { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: clause; }
+  .toc li { margin: 0; counter-increment: clause; }
+  .toc a { display: flex; align-items: center; gap: 0.85rem; min-height: 44px; padding: 0.55rem 0; border-top: 1px solid var(--concrete); font-family: var(--font-display); font-size: var(--fs-dense); line-height: 1.3; color: var(--ink); text-decoration: none; }
+  .toc a::before { content: counter(clause, decimal-leading-zero); flex: 0 0 auto; font-size: var(--fs-eyebrow); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; color: var(--steel); }
+  .toc li:last-child a { border-bottom: 1px solid var(--concrete); }
+  .toc a:hover, .toc a:hover::before { color: var(--deep-green); }
+
+  /* Legal prose carries long URLs and email addresses; they wrap rather than overflow. */
+  .legal__body { overflow-wrap: anywhere; }
+  .legal__body h2 { scroll-margin-top: 1.5rem; font-size: var(--fs-h3); margin-top: clamp(2.5rem, 5vw, 3.75rem); padding-top: clamp(1.25rem, 2.5vw, 1.75rem); border-top: 1px solid var(--concrete); }
+  .legal__body h3 { margin-top: 1.9em; color: var(--ink); }
+  .legal__body > :first-child { margin-top: 0; }
+  .legal__body ul { margin-top: 1em; }
+  .addr { font-style: normal; line-height: 1.6; }
+  .updated { margin-top: clamp(2.5rem, 5vw, 3.5rem); padding-top: 1rem; border-top: 1px solid var(--concrete); }
+</style>

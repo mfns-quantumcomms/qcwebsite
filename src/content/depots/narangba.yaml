@@ -1,0 +1,15 @@
+name: Narangba depot
+role: Depot
+state: QLD
+street: 721-723 Old Gympie Road
+suburb: Narangba
+postcode: "4504"
+phone: { display: "03 9219 0948", tel: "+61392190948" }
+email: admin@quantumcomms.com.au
+hours: Monday to Friday, 7:00 am to 4:00 pm
+timezone: Australia/Brisbane
+confirmed: true
+geo: { lat: -27.207719, lng: 152.986148 }
+capabilities: [Truck-mounted EWP fleet, Rigging crews, Wet and dry hire]
+order: 3
+meta: { verified: false, source: "Site footer; Capability Statement Rev 10 lists Brisbane. Client to confirm local phone", lastVerified: null }

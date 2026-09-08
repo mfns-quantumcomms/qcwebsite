@@ -1,0 +1,11 @@
+name: Penrith depot
+role: Depot
+state: NSW
+suburb: Penrith
+postcode: "2750"
+timezone: Australia/Sydney
+confirmed: false
+geo: { lat: -33.751195, lng: 150.694171 }
+capabilities: [Truck-mounted EWP fleet, Rigging crews]
+order: 4
+meta: { verified: false, source: "Site footer says Penrith with no street address; Capability Statement Rev 10 says Newcastle. Client to confirm", lastVerified: null }

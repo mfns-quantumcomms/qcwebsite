@@ -1,0 +1,516 @@
+---
+/**
+ * HTML capability statement, generated from the registers on every build:
+ * company.ts (company, certifications, training, plant, programmes), the services, fleet and
+ * depots collections. Print-friendly. The PDF edition is generated from this page at launch.
+ *
+ * Print is a first-class output here. Everything added for the screen (the photographic band,
+ * the section rules and the scroll reveal) is neutralised in the @media print block at the
+ * foot of this file, so an A4 print stays the plain document a procurement reader files.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import ProofStrip from '@components/ProofStrip.astro';
+import FleetTable from '@components/FleetTable.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { photos, alts } from '@data/images';
+import { company, certifications, headlineFacts, programmes, training, plant, depotPolicy } from '@data/company';
+import { confirmedDepots, coverageStates, fleetAll, registerMaxHeight, depotHref } from '../lib/facts';
+
+const stateNames: Record<string, string> = {
+  VIC: 'Victoria', NSW: 'New South Wales', QLD: 'Queensland', SA: 'South Australia',
+  WA: 'Western Australia', TAS: 'Tasmania', NT: 'Northern Territory', ACT: 'Australian Capital Territory',
+};
+const stateOrder = ['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
+const listJoin = (arr: string[]) => (arr.length <= 1 ? arr.join('') : `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`);
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const serviceGroups = (['Telecommunications', 'Hire', 'Workshop'] as const).map((g) => ({ group: g, items: services.filter((s) => s.data.group === g) })).filter((g) => g.items.length > 0);
+const depots = await confirmedDepots();
+const coverageSet = new Set<string>(await coverageStates());
+const coverage = stateOrder.filter((s) => coverageSet.has(s));
+const coverageNames = listJoin(coverage.map((s) => stateNames[s] ?? s));
+const fleet = await fleetAll();
+const top = await registerMaxHeight();
+const anyUnverifiedCert = certifications.some((c) => !c.certificate.verified);
+
+/**
+ * Register strings occasionally carry a hyphenated numeric range (for example a frequency band).
+ * House style spells a range with the word "to", so ranges are rewritten on the way to the page.
+ * The value itself still comes from the register; only its punctuation changes.
+ */
+const spellRanges = (text: string) => text.replace(/(\d)\s*[-\u2013\u2014]\s*(\d)/g, '$1 to $2');
+
+const plantGroups: Array<[string, string[]]> = [
+  ['Earthmoving', plant.earthmoving], ['Trucks', plant.trucks], ['Rigging', plant.rigging], ['Test instruments', plant.instruments], ['Power', plant.power],
+];
+
+const hireFeatures = [
+  'Wet or dry hire, short or long term',
+  'Units fitted with lifting arms or winches',
+  'Four-wheel-drive and all-wheel-drive chassis for unsealed access',
+  'Narrow and one-sided jacking on selected units',
+  'Extendable baskets on selected units',
+  'Low-voltage insulated unit on the register; high-voltage insulated units available on request, per our capability statement',
+  'Bog mats and electrical spotters available',
+  'Operators with rigging and dogging experience on wet hire',
+];
+
+const now = new Date();
+const generated = now.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+const url = `${company.siteUrl}/capability-statement/`;
+const description = `${company.tradingName} capability statement: company details, services, fleet register, depots, certifications, training and programmes, in one printable page.`;
+
+const sections = [
+  { id: 'company', label: 'Company overview' },
+  { id: 'services', label: 'Services' },
+  { id: 'fleet', label: 'Fleet and plant' },
+  { id: 'depots', label: 'Depots and coverage' },
+  { id: 'certifications', label: 'Certifications' },
+  { id: 'training', label: 'Training and inductions' },
+  { id: 'programmes', label: 'Programmes and past work' },
+  { id: 'contact', label: 'Contact' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': url,
+  url,
+  name: `${company.tradingName} capability statement`,
+  description,
+  inLanguage: 'en-AU',
+  isPartOf: { '@type': 'WebSite', url: company.siteUrl, name: company.tradingName },
+  about: { '@id': `${company.siteUrl}/#organization` },
+  publisher: { '@id': `${company.siteUrl}/#organization` },
+  dateModified: now.toISOString().slice(0, 10),
+};
+---
+<Base title="Capability statement" description={description} jsonLd={jsonLd}>
+  <Hero
+    variant="photo"
+    eyebrow="Capability statement"
+    title={`${company.tradingName} capability statement`}
+    lead="Company details, services, fleet register, depots, certifications, training and programmes, generated from the same registers as the rest of this site. Print it, or save it as a PDF from the print dialogue."
+    image={photos.towerErection}
+    imageAlt={alts.towerErection}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Capability statement' }]} />
+    <div class="cs-actions">
+      <div class="btn-row">
+        <button class="btn btn--primary" type="button" aria-disabled="true" aria-describedby="pdf-note">Download PDF</button>
+        <button class="btn btn--secondary" type="button" data-print>Print this page</button>
+      </div>
+      <p class="notice" id="pdf-note">The PDF edition is generated from this page at launch and will be linked here. Until then, print this page or save it as a PDF from the print dialogue.</p>
+    </div>
+  </Hero>
+
+  <div class="print-only container cs-print-head">
+    <p><strong>{company.legalName}</strong> · ABN {company.abn} · {company.hqAddress.street}, {company.hqAddress.suburb} {company.hqAddress.state} {company.hqAddress.postcode} · {company.phoneMain.display} · {company.email} · {company.siteUrl}</p>
+    <p>Capability statement, web edition, generated {generated}.</p>
+  </div>
+
+  <section class="section section--dark feature cs-band">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.fleetYard} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <ProofStrip tone="dark" />
+      <nav class="cs-toc" aria-label="Contents">
+        <p class="eyebrow">Contents</p>
+        <ol>{sections.map((s, i) => <li><a href={`#${s.id}`}>{i + 1}. {s.label}</a></li>)}</ol>
+      </nav>
+    </div>
+  </section>
+
+  <section class="section section--white cs-section" id="company">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">1. Company</p>
+        <h2>Company overview</h2>
+        <p class="lead">{company.legalName}, trading as {company.tradingName}, is an Australian telecommunications rigging, civil works and truck-mounted EWP hire contractor.</p>
+      </div>
+      <div class="split split--wide-text split--top reveal">
+        <div class="prose">
+          <p>The business began trading{headlineFacts.tradingSince.verified ? ` in ${headlineFacts.tradingSince.value}` : ''} as {company.formerName}, hiring truck-mounted EWPs mainly to the telecommunications industry, and now delivers rigging, civil and construction services to carriers, tier-one contractors, broadcasters and utilities.</p>
+          <p>Work is delivered by rigging crews, civil and road-access crews, technicians and qualified EWP operators, supported by electricians, scaffolders, electrical spotters, transmission linesmen, diesel mechanics, project engineers and project management. Crews work throughout Australia in metro and remote locations.</p>
+          <p>Comms and rigging, civil works, and EWP, generator and plant hire (wet or dry) sit under one management system. Steel fabrication, thermal coating and EWP servicing run from the workshop in Victoria.</p>
+        </div>
+        <dl class="spec cs-spec">
+          <dt>Legal name</dt><dd>{company.legalName}</dd>
+          <dt>Trading name</dt><dd>{company.tradingName}</dd>
+          <dt>Formerly</dt><dd>{company.formerName}</dd>
+          <dt>ABN</dt><dd>{company.abn}</dd>
+          <dt>ACN</dt><dd>{company.acn}</dd>
+          {headlineFacts.tradingSince.verified && (
+            <>
+              <dt>Trading since</dt><dd>{headlineFacts.tradingSince.value}</dd>
+            </>
+          )}
+          <dt>Head office</dt><dd>{company.hqAddress.street}, {company.hqAddress.suburb} {company.hqAddress.state} {company.hqAddress.postcode}</dd>
+          <dt>Phone</dt><dd><a href={`tel:${company.phoneMain.tel}`}>{company.phoneMain.display}</a></dd>
+          <dt>Mobile</dt><dd><a href={`tel:${company.phoneMobile.tel}`}>{company.phoneMobile.display}</a></dd>
+          <dt>Email</dt><dd><a href={`mailto:${company.email}`}>{company.email}</a></dd>
+          <dt>Website</dt><dd><a href={company.siteUrl}>{company.siteUrl.replace('https://', '')}</a></dd>
+          <dt>Hours</dt><dd>{company.hours}</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist cs-section" id="services">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">2. Services</p>
+        <h2>Services</h2>
+        <p class="lead">Scopes as published on each service page. Every scope is priced from your design pack and delivered with SWMS, lift plans and rescue plans per site.</p>
+      </div>
+      <div class="reveal">
+        {serviceGroups.map((g) => (
+          <div class="cs-group">
+            <h3>{g.group}</h3>
+            <div class="grid grid--2">
+              {g.items.map((s) => (
+                <article class="card cs-service">
+                  <h4><a href={`/services/${s.id}/`}>{s.data.title}</a></h4>
+                  <p>{s.data.summary}</p>
+                  <ul class="card-list">{s.data.scope.map((line) => <li>{line}</li>)}</ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        ))}
+        <p class="caption cs-after">Services are added here as their pages are published.</p>
+        <p class="mb-0"><a class="arrow-link" href="/services/">All services</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white cs-section" id="fleet">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">3. Fleet and plant</p>
+        <h2 id="fleet-caption">Fleet register summary</h2>
+        <p class="lead">Truck-mounted EWPs and insulated units on the register, with working height, outreach, safe working load and chassis. Each unit has its own page with transport dimensions, jacking footprint and licence class. {top && top.status !== 'in-service' ? `The tallest unit on the register, the ${top.name}, is ${top.status === 'on-order' ? 'on order' : 'to be confirmed'} and not yet available for hire.` : ''}</p>
+      </div>
+      <div class="reveal">
+        <p class="scroll-hint" id="fleet-hint">Seven columns. On a narrow screen, scroll the table sideways to reach chassis and status.</p>
+        <div class="reg__scroll" tabindex="0" role="region" aria-labelledby="fleet-caption" aria-describedby="fleet-hint">
+          <FleetTable units={fleet} caption="Fleet register summary" showClass scrollable={false} />
+        </div>
+        <p class="caption mt-sm">Specifications are from the manufacturers' data sheets as recorded in the register and are confirmed per unit at booking. Units marked on order or to confirm are not available for hire until commissioned. See <a href="/fleet/">the fleet register</a> and <a href="/fleet/how-hire-works/">how hire works</a>.</p>
+      </div>
+
+      <div class="split split--top mt reveal">
+        <div>
+          <h3>Hire features</h3>
+          <ul>{hireFeatures.map((f) => <li>{f}</li>)}</ul>
+        </div>
+        <div>
+          <h3>Plant and instruments</h3>
+          <div class="grid grid--2 plant">
+            {plantGroups.map(([heading, items]) => (
+              <div class="plant__group">
+                <h4>{heading}</h4>
+                <ul class="card-list">{items.map((i) => <li>{spellRanges(i)}</li>)}</ul>
+              </div>
+            ))}
+          </div>
+          <p class="caption">Source: {plant.source}. See <a href="/fleet/generators-and-plant/">generators and plant</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist cs-section" id="depots">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">4. Depots and coverage</p>
+        <h2>Depots and coverage</h2>
+      </div>
+      <div class="reveal">
+        <p class="scroll-hint">Five columns. On a narrow screen, scroll the table sideways to reach the phone number and capabilities.</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Confirmed depots">
+          <table>
+            <caption>Confirmed depots</caption>
+            <thead>
+              <tr>
+                <th scope="col">Depot</th>
+                <th scope="col">Role</th>
+                <th scope="col">Address</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Capabilities</th>
+              </tr>
+            </thead>
+            <tbody>
+              {depots.map((d) => (
+                <tr>
+                  <th scope="row"><a href={depotHref(d)}>{d.data.name}</a></th>
+                  <td>{d.data.role}</td>
+                  <td>{[d.data.street, `${d.data.suburb} ${d.data.state} ${d.data.postcode ?? ''}`.trim()].filter(Boolean).join(', ')}</td>
+                  <td>{d.data.phone ? <a href={`tel:${d.data.phone.tel}`}>{d.data.phone.display}</a> : 'Not stated'}</td>
+                  <td>{d.data.capabilities.join(', ')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-sm">Service coverage: {coverageNames}. Crews and units mobilise to metro and remote sites anywhere in Australia; travel and accommodation are quoted per job.</p>
+        <p class="notice">Additional depots are listed once confirmed. {depotPolicy.note}</p>
+        <p class="mb-0"><a class="arrow-link" href="/locations/">Depots and coverage in full</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white cs-section" id="certifications">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">5. Certifications</p>
+        <h2>Certified management systems</h2>
+        <p class="lead">One integrated management system certified through a JAS-ANZ accredited certification body. Certificates with certified scope and expiry are supplied in the prequalification pack.</p>
+      </div>
+      <div class="reveal">
+        <p class="scroll-hint">Four columns. On a narrow screen, scroll the table sideways to reach the certificate number and registrar.</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Certifications">
+          <table>
+            <caption>Certifications</caption>
+            <thead>
+              <tr>
+                <th scope="col">Standard</th>
+                <th scope="col">Scope</th>
+                <th scope="col">Certificate number</th>
+                <th scope="col">Registrar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {certifications.map((c) => (
+                <tr>
+                  <th scope="row">{c.standard}</th>
+                  <td>{c.scope}</td>
+                  <td>
+                    <span class="cert-no">{c.certificate.value}</span>
+                    {!c.certificate.verified && <span class="chip chip--warn">Unverified, to be confirmed</span>}
+                  </td>
+                  <td>{c.registrar}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {anyUnverifiedCert && <p class="notice mt-sm">Certificate numbers marked unverified are being checked against the issued certificates before launch. See <a href="/compliance/">compliance</a> for the full picture and to request the prequalification pack.</p>}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist cs-section" id="training">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">6. Training</p>
+        <h2>Training and inductions</h2>
+      </div>
+      <div class="split split--top reveal">
+        <div>
+          <div class="table-wrap">
+            <table>
+              <caption>Minimum training, every field employee</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Training or induction</th>
+                  <th scope="col">Renewal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {training.everyFieldEmployee.map(([course, cycle]) => (
+                  <tr>
+                    <th scope="row">{course}</th>
+                    <td>{cycle}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="caption mt-sm">Source: {training.source}.</p>
+        </div>
+        <div>
+          <h3>Specialist site inductions</h3>
+          <ul>{training.specialist.map((s) => <li>{s}</li>)}</ul>
+          <h3>EWP operator credentials</h3>
+          <ul>{training.operatorCredentials.map((s) => <li>{s}</li>)}</ul>
+          <h3>Team leader vehicle kit</h3>
+          <ul>{training.vehicleKit.map((s) => <li>{s}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white cs-section" id="programmes">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">7. Programmes</p>
+        <h2>Programmes and past work</h2>
+      </div>
+      <div class="split split--top reveal">
+        <div>
+          <h3>Current programmes</h3>
+          <ul>{programmes.current.map((p) => <li>{p}</li>)}</ul>
+          <h3>Past clients</h3>
+          <p>Work delivered for {listJoin(programmes.pastClients)}, and directly for carriers and broadcasters.</p>
+        </div>
+        <div>
+          <h3>Past work</h3>
+          <ul class="two-col">{programmes.pastWork.map((p) => <li>{p}</li>)}</ul>
+        </div>
+      </div>
+      <p class="notice reveal">Source: {programmes.source} Case studies with scope, dates and client references are published on the <a href="/projects/">projects page</a> as clients approve them.</p>
+    </div>
+  </section>
+
+  <section class="section section--mist cs-section" id="contact">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">8. Contact</p>
+        <h2>Contact</h2>
+      </div>
+      <div class="split split--top reveal">
+        <dl class="spec cs-spec">
+          <dt>Head office</dt><dd>{company.hqAddress.street}, {company.hqAddress.suburb} {company.hqAddress.state} {company.hqAddress.postcode}</dd>
+          <dt>Phone</dt><dd><a href={`tel:${company.phoneMain.tel}`}>{company.phoneMain.display}</a></dd>
+          <dt>Mobile</dt><dd><a href={`tel:${company.phoneMobile.tel}`}>{company.phoneMobile.display}</a></dd>
+          <dt>Email</dt><dd><a href={`mailto:${company.email}`}>{company.email}</a></dd>
+          <dt>Hours</dt><dd>{company.hours}</dd>
+          <dt>Website</dt><dd><a href={company.siteUrl}>{company.siteUrl.replace('https://', '')}</a></dd>
+          <dt>LinkedIn</dt><dd><a href={company.social.linkedin} rel="noopener" target="_blank">{company.social.linkedin.replace('https://', '')}<span class="visually-hidden"> (opens in a new tab)</span></a></dd>
+        </dl>
+        <div>
+          <h3>Documents on request</h3>
+          <ul>
+            <li>Prequalification pack: certificates, insurances, policies and training records. <a href="/compliance/">Request it here</a>.</li>
+            <li>Unit spec sheets, log books and service history for any hired unit. <a href="/fleet/">Fleet register</a>.</li>
+            <li>Hire terms. <a href="/hire-terms/">Read the hire terms</a>.</li>
+          </ul>
+          <p class="caption">{company.afterHours}</p>
+        </div>
+      </div>
+      <p class="caption cs-control">Web edition generated from the website registers on {generated}. Items marked "to be confirmed" or "unverified" are being checked against source documents before launch.</p>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need this on file, or the full pack?"
+    text="Print this page or save it as a PDF now. For certificates, insurances and policies, request the prequalification pack from the compliance page."
+    primary={{ label: 'Request the prequalification pack', href: '/compliance/' }}
+    secondary={{ label: 'Contact', href: '/contact/' }}
+  />
+</Base>
+
+<script>
+  document.querySelector<HTMLButtonElement>('[data-print]')?.addEventListener('click', () => window.print());
+</script>
+
+<style>
+  .cs-actions { margin-top: 1.25rem; display: grid; gap: 1rem; max-width: 60ch; }
+  .cs-actions .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+  .cs-actions .notice { margin: 0; }
+  .print-only { display: none; }
+
+  /* Masthead band: the proof strip and the contents list over a photograph. It carries nothing
+     the printed document needs, so print drops the whole band (see the print block below). */
+  .cs-band { position: relative; overflow: hidden; }
+  .cs-band .feature__bg { position: absolute; inset: 0; }
+  .cs-band .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 50%; }
+  /* A dense, near-flat scrim: the proof tiles and the contents list sit across the full width,
+     so every part of the band has to clear 4.5:1, not just one side of it. */
+  .cs-band .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.97) 0%, rgba(21,25,28,.94) 100%); }
+  .cs-band .feature__inner { position: relative; }
+
+  .cs-toc { margin-top: clamp(1.75rem, 3vw, 2.5rem); padding-top: clamp(1.25rem, 2.5vw, 1.75rem); border-top: 1px solid var(--rule-on-ink); }
+  .cs-toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; max-width: none; }
+  .cs-toc li { margin: 0; min-width: 0; }
+  /* Standalone navigation links, so each is a full tap target rather than a line of text. */
+  .cs-toc a { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-dense); text-decoration: none; color: var(--white); display: inline-flex; align-items: center; min-height: 44px; }
+  .cs-toc a:hover { color: var(--quantum-green); text-decoration: underline; }
+
+  .split--top { align-items: start; }
+  .split > *, .grid > * { min-width: 0; }
+  .cs-spec { align-self: start; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; }
+  .section--white .cs-spec { background: var(--mist); }
+  /* Definition lists carry long single strings (URLs, addresses), so they wrap and
+     stack below 480 px rather than pushing the page sideways. */
+  .spec { grid-template-columns: minmax(0, max-content) minmax(0, 1fr); }
+  .spec dt, .spec dd { overflow-wrap: anywhere; }
+  @media (max-width: 480px) {
+    .spec { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .spec dt { margin-top: 0.6rem; }
+    .spec dt:first-of-type { margin-top: 0; }
+  }
+  .cs-group + .cs-group { margin-top: clamp(1.75rem, 3vw, 2.5rem); }
+  .cs-group h3 { font-size: var(--fs-h4); }
+  .cs-service h4 { margin: 0; font-size: 1.15rem; }
+  .cs-service h4 a { color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; }
+  .cs-service h4 a:hover { color: var(--deep-green); text-decoration: underline; }
+  .cs-after { margin-top: 1.25rem; margin-bottom: 0.25rem; }
+  .card-list { margin: 0; padding-left: 1.1rem; }
+  .plant { gap: 1rem; }
+  .plant__group h4 { font-size: 1rem; margin-bottom: 0.35rem; }
+  .two-col { columns: 2; column-gap: 2rem; max-width: none; }
+  .two-col li { break-inside: avoid; }
+  @media (max-width: 640px) { .two-col { columns: 1; } }
+  /* Wide tables scroll inside their own named, focusable box. */
+  .table-wrap { min-width: 0; }
+  .table-wrap .chip { white-space: normal; }
+  .scroll-hint { font-size: var(--fs-caption); color: var(--steel); margin: 0 0 0.6rem; max-width: var(--measure); }
+  .reg__scroll { overflow-x: auto; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+  .reg__scroll :global(.table-wrap) { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .reg__scroll :global(table) { min-width: 44rem; }
+  .reg__scroll :global(.chip) { white-space: normal; }
+  .cert-no { display: inline-block; margin-right: 0.5rem; }
+  .cs-control { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .mt { margin-top: clamp(1.75rem, 3.5vw, 2.75rem); }
+  .mt-sm { margin-top: 1rem; }
+
+  @page { margin: 14mm; }
+  @media print {
+    /* The screen furniture goes: the actions, the photographic masthead band with its proof
+       strip and contents list, and the breadcrumb trail. */
+    .cs-actions, .cs-band { display: none !important; }
+    .print-only { display: block !important; margin-top: 0.5rem; font-size: 10pt; }
+    .cs-print-head p { margin: 0 0 0.25rem; max-width: none; }
+    /* The reveal animation never runs on paper, so every block prints at full opacity
+       whether or not it was scrolled into view before the print dialogue opened. */
+    .reveal { opacity: 1 !important; transform: none !important; }
+    /* The section head collapses to a plain heading: no rule, no editorial column split. */
+    .section-head { display: block !important; max-width: none; margin-bottom: 0.35rem; }
+    .section-head__rule { display: none !important; }
+    .section-head .lead { max-width: none; }
+    .cs-section { padding-block: 0.6rem; break-inside: auto; }
+    .cs-section h2 { break-after: avoid; font-size: 16pt; margin-top: 0.75rem; margin-bottom: 0.35rem; }
+    .cs-section h3 { break-after: avoid; font-size: 13pt; }
+    .cs-section h4 { font-size: 11pt; }
+    .eyebrow { display: none; }
+    .lead { font-size: 11pt; }
+    .arrow-link { min-height: 0; }
+    table { font-size: 9.5pt; }
+    .table-wrap, .card, .cs-spec, .plant__group, tr { break-inside: avoid; }
+    .card { box-shadow: none; padding: 0.75rem; }
+    .grid, .split { gap: 0.75rem; }
+    .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .two-col { columns: 2; }
+    /* On A4 nothing scrolls, so every table must print in full inside the margins. */
+    .scroll-hint { display: none !important; }
+    .table-wrap, .reg__scroll { overflow: visible !important; }
+    .reg__scroll :global(table) { min-width: 0 !important; }
+    .notice { border-left-width: 2px; background: #fff; padding: 0.4rem 0.75rem; }
+    .chip { border: 1px solid #000; background: #fff; color: #000; }
+  }
+</style>

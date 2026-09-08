@@ -1,0 +1,47 @@
+---
+import type { CollectionEntry } from 'astro:content';
+interface Props { depot: CollectionEntry<'depots'>; link?: boolean }
+const { depot, link = true } = Astro.props;
+const d = depot.data;
+const addr = [d.street, `${d.suburb} ${d.state} ${d.postcode ?? ''}`.trim()].filter(Boolean);
+---
+<div class="card depot">
+  <div class="depot__head">
+    <span class="chip">{d.state}</span>
+    <span class="chip chip--green">{d.role}</span>
+  </div>
+  <h3>{link ? <a href={`/locations/${depot.id}/`}>{d.name}</a> : d.name}</h3>
+  <address class="depot__addr">{addr.map((l) => <span>{l}<br /></span>)}</address>
+  <div class="depot__contact">
+    {d.phone && <p><a href={`tel:${d.phone.tel}`}><span class="visually-hidden">Call </span>{d.phone.display}</a></p>}
+    {d.email && <p><a href={`mailto:${d.email}`}>{d.email}</a></p>}
+    {d.hours && <p class="caption">{d.hours} ({d.timezone.replace('Australia/', '')} time)</p>}
+  </div>
+  {d.mapUrl && <p class="depot__map"><a class="arrow-link" href={d.mapUrl} rel="noopener" target="_blank">Open in Google Maps<span class="visually-hidden"> (opens in a new tab)</span></a></p>}
+</div>
+<style>
+  /* Text only, so the plain card is still right. The work is done by the type scale and by
+     one hairline that separates the identity of the depot from how you reach it. */
+  .depot { min-width: 0; gap: 0.65rem; }
+  .depot__head { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  /* Depot roles run to several words, so these chips wrap inside the card. */
+  .depot__head .chip { white-space: normal; }
+
+  .depot h3 { font-size: var(--fs-h4); letter-spacing: -0.02em; margin: 0.15rem 0 0; overflow-wrap: break-word; }
+  .depot h3 a { text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; min-height: 24px; }
+  .depot h3 a:hover { color: var(--deep-green); }
+
+  /* Street lines and long email addresses wrap inside the card rather than widening it. */
+  .depot__addr { font-style: normal; line-height: 1.5; color: var(--graphite); overflow-wrap: anywhere; }
+
+  .depot__contact { display: flex; flex-direction: column; padding-top: 0.85rem; border-top: 1px solid var(--concrete); }
+  .depot__contact p { margin: 0; overflow-wrap: anywhere; }
+  /* Phone and email are tap targets, not running text. */
+  .depot__contact p > a { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-display); font-weight: 500; }
+  .depot__contact .caption { margin-top: 0.35rem; }
+
+  /* The global "a link alone in a paragraph" rule sets a 24 px floor; a card's one next step
+     is worth the full 44 px. */
+  .depot__map { margin: auto 0 0; }
+  .depot__map .arrow-link { min-height: 44px; }
+</style>

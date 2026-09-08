@@ -1,0 +1,196 @@
+---
+/**
+ * Insulated EWP class page. Units are read from the register (unitClass = insulated).
+ * HV availability is stated as per the capability statement until the register carries an HV unit.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import FleetTable from '@components/FleetTable.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { photos, alts } from '@data/images';
+import { training, headlineFacts } from '@data/company';
+import { fleetAll, unitHref } from '../../lib/facts';
+
+const units = (await fleetAll()).filter((u) => u.data.unitClass === 'insulated' || Boolean(u.data.insulated));
+const ratings = Array.from(new Set(units.map((u) => u.data.insulated).filter((r): r is string => Boolean(r))));
+const hasHv = ratings.includes('HV');
+const idealFor = Array.from(new Set(units.flatMap((u) => u.data.idealFor)));
+const ausnet = headlineFacts.ausnetAdp;
+const hvSpecialist = training.specialist.find((s) => s.toLowerCase().includes('ausnet'));
+
+const description =
+  'LV and HV insulated EWPs from Quantum Comms for work near live lines, with electrical spotters and carrier-inducted operators, listed from the fleet register.';
+---
+<Base title="Insulated EWPs" description={description}>
+  <Hero
+    variant="photo"
+    eyebrow="Fleet and hire"
+    title="Insulated EWPs"
+    lead="Platforms with insulated boom sections and baskets for work near energised low-voltage and high-voltage conductors, supplied with an operator and, where the site needs it, an electrical spotter."
+    image={photos.ewpLatticeTower}
+    imageAlt={alts.ewpLatticeTower}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Fleet', href: '/fleet/' }, { label: 'Insulated' }]} />
+    <p class="chips">
+      {ratings.map((r) => <span class="chip chip--navy">{r} insulated on the register</span>)}
+      {!hasHv && <span class="chip">HV per capability statement</span>}
+    </p>
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">What insulated means</p>
+        <h2>LV and HV insulated units</h2>
+      </div>
+      <div class="split split--wide-text reveal">
+        <div>
+          <p>An insulated EWP has boom sections, and usually the basket, built and periodically dielectric-tested to a stated voltage class. The rating is a property of the unit, not the job: it reduces the consequence of accidental contact, and it does not replace the controls the network operator requires.</p>
+          <ul>
+            <li><strong>LV insulated.</strong> For work near low-voltage distribution: service lines, streetlights, distribution poles and fibre or small-cell attachments on power and tram poles.</li>
+            <li><strong>HV insulated.</strong> For work near high-voltage lines and on transmission structures, where the network operator's access permit specifies an insulated platform.</li>
+          </ul>
+          <p>On every job near power you still need the permit to work, the approach distances and exclusion zones the network operator sets, a spotter where required, and an operator who holds the relevant induction. We supply the operator and can supply the spotter; you or the network operator issue the permit.</p>
+        </div>
+        <figure class="figure figure--ratio">
+          <Image src={photos.poleInstall} alt={alts.poleInstall} widths={[500, 900, 1200]} sizes="(min-width: 860px) 45vw, 100vw" />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Register</p>
+        <h2 id="reg-caption">Insulated units on the register</h2>
+      </div>
+      <div class="reveal">
+        {units.length > 0 ? (
+          <>
+            <p class="reg__hint" id="reg-hint">On a narrow screen, scroll the table sideways to reach safe working load, chassis and status.</p>
+            <div class="reg__scroll" tabindex="0" role="region" aria-labelledby="reg-caption" aria-describedby="reg-hint">
+              <FleetTable units={units} caption="Insulated units" scrollable={false} />
+            </div>
+            <p class="caption">Select a unit for its rating, chassis, safe working load, wind limit and an enquiry form. Ask for the unit's current dielectric test record with your enquiry.</p>
+          </>
+        ) : (
+          <p class="notice">No insulated units are listed on the register yet. Placeholder for the client: please supply make, model, rating, working height and status for each insulated unit.</p>
+        )}
+        {!hasHv && (
+          <p class="notice">Our capability statement lists both low-voltage and high-voltage insulated units as available. The register currently carries the low-voltage unit only. Placeholder for the client: confirm the HV unit's make, model, rating, working height and status so it can be listed.</p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  {idealFor.length > 0 && (
+    <section class="section section--dark feature">
+      <div class="feature__bg" aria-hidden="true">
+        <Image src={photos.ewpGreenSite} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+      </div>
+      <div class="container feature__inner">
+        <div class="feature__text reveal">
+          <div class="section-head__rule"></div>
+          <p class="eyebrow">Typical work</p>
+          <h2>What the insulated units are used for</h2>
+          <ul class="ideal">
+            {idealFor.map((item) => <li>{item}</li>)}
+          </ul>
+          <p class="feature__note">Drawn from the register entries. See each <a href={units.length ? unitHref(units[0]) : '/fleet/'}>unit page</a> for its own list.</p>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">People</p>
+        <h2>Electrical spotters and HV-inducted crews</h2>
+      </div>
+      <div class="grid grid--3 reveal">
+        <div class="card">
+          <h3>Electrical spotters</h3>
+          <p>Our capability statement lists electrical spotters as available with the fleet. Where the network operator or your safe-work method requires a spotter, ask for one with the unit.</p>
+        </div>
+        <div class="card">
+          <h3>Operators</h3>
+          <p>Operators hold the credentials listed on the hire page, including working at heights, tower rescue and carrier inductions, and most have rigging and dogging experience.</p>
+          <a class="arrow-link card__cta" href="/fleet/how-hire-works/#operators">Operator credentials</a>
+        </div>
+        <div class="card">
+          <h3>HV lines</h3>
+          <p>{hvSpecialist ? `Crews with current inductions for ${hvSpecialist.replace(/\s*\(.*\)\s*$/, '')} are listed in our training matrix.` : 'Crews with HV line inductions are listed in our training matrix.'} {ausnet.verified ? `${ausnet.value}.` : `Accredited Delivery Partner status with AusNet Services is stated in our capability statement and is being confirmed for publication.`}</p>
+          <a class="arrow-link card__cta" href="/compliance/">Training matrix</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Before you book</p>
+        <h2>What to send with an insulated-unit enquiry</h2>
+      </div>
+      <div class="reveal">
+        <ul class="checklist">
+          <li>The network operator and the voltage class of the nearest conductors.</li>
+          <li>Whether an access permit or a network-issued authority is already in place.</li>
+          <li>Whether you need a spotter, and whether your own crew is inducted for the site.</li>
+          <li>Working height, outreach and what goes in the basket.</li>
+          <li>Ground conditions and access, so the depot can confirm the unit and any bog mats.</li>
+        </ul>
+        <p>Hire conditions, prestarts and minimum terms are on the <a href="/fleet/how-hire-works/">how hire works</a> page and in the <a href="/hire-terms/">hire terms</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Working near live lines?"
+    text="Send the site, the network operator and the voltage class. The depot will confirm the insulated unit, the operator and a spotter if you need one."
+    primary={{ label: 'Enquire about hire', href: '/fleet/how-hire-works/#enquiry' }}
+    secondary={{ label: 'Full fleet register', href: '/fleet/' }}
+  />
+</Base>
+
+<style>
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; }
+  /* Chip labels here are sentences, so they must be allowed to wrap on a 320 px screen. */
+  .chips .chip { white-space: normal; }
+  .card__cta { margin-top: auto; align-self: flex-start; }
+  .notice { margin-top: 1rem; max-width: var(--measure); }
+  /* Register table: the page owns the scroll container so it can be named and focused. */
+  .reg__hint { font-size: var(--fs-caption); color: var(--steel); margin: 0 0 0.6rem; max-width: var(--measure); }
+  .reg__scroll { overflow-x: auto; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+  .reg__scroll :global(.table-wrap) { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .reg__scroll :global(table) { min-width: 38rem; }
+  .reg__scroll :global(.chip) { white-space: normal; }
+
+  /* A checklist reads faster in two columns when the row has the width for it. */
+  .checklist { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 0.8rem 3rem; max-width: none; }
+  .checklist > * { min-width: 0; }
+  @media (min-width: 780px) { .checklist { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .checklist li { position: relative; padding-left: 1.6rem; margin: 0; }
+  .checklist li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 0.55rem; height: 0.55rem; border-radius: 2px; background: var(--deep-green); }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 62ch; }
+  .feature__note { color: var(--on-ink-quiet); font-size: var(--fs-dense); margin: 0; }
+  .ideal { margin: 1.25rem 0 1.5rem; padding-left: 1.2rem; max-width: none; }
+  .ideal li { margin-bottom: 0.5rem; }
+  .ideal li::marker { color: var(--quantum-green); }
+</style>

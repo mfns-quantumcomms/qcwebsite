@@ -1,0 +1,283 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import FleetTable from '@components/FleetTable.astro';
+import CoverageMap from '@components/CoverageMap.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { photos, alts } from '@data/images';
+import { company, programmes, certifications, headlineFacts, training } from '@data/company';
+import { confirmedDepots, fleetInService, registerMaxHeight, coverageStates, stateNames } from '../lib/facts';
+
+const depots = await confirmedDepots();
+const states = await coverageStates();
+const fleet = (await fleetInService()).slice(0, 5);
+const top = await registerMaxHeight();
+const news = (await getCollection('news')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()).slice(0, 2);
+
+// Every year, standard and place name below is read from the registers; nothing is typed here.
+const listJoin = (arr: string[]) => (arr.length <= 1 ? arr.join('') : `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`);
+const since = headlineFacts.tradingSince.verified ? headlineFacts.tradingSince.value : null;
+const isoShort = certifications.map((c) => c.standard.split(':')[0].replace(/^ISO\s*/, ''));
+const isoPhrase = `ISO ${listJoin(isoShort)}`;
+const hqState = company.hqAddress.state;
+const hqStateName = stateNames[hqState] ?? hqState;
+const depotStates = depots.map((d) => d.data.state).filter((v, i, a) => a.indexOf(v) === i);
+const otherDepotStates = depotStates.filter((s) => s !== hqState);
+const otherDepotStateNames = listJoin(otherDepotStates.map((s) => stateNames[s] ?? s));
+const otherDepotWord = otherDepotStates.length === 1 ? 'a depot' : 'depots';
+const yardWithHq = depots.some((d) => d.data.role === 'Workshop and fleet yard' && d.data.state === hqState);
+
+const heroLead = `Crews, plant and platforms under one ${isoPhrase} certified management system, based in ${hqStateName}${otherDepotStates.length ? ` with ${otherDepotWord} in ${otherDepotStateNames}` : ''}.`;
+const whereLead = `Head office${yardWithHq ? ' and fleet yard' : ''} in ${hqStateName}${otherDepotStates.length ? `, ${otherDepotWord} in ${otherDepotStateNames}` : ''}, and crews that travel. Service coverage extends to ${listJoin(states.map((s) => stateNames[s] ?? s))}.`;
+const description = 'Quantum Comms: Australian telecommunications rigging, civil works and truck-mounted EWP hire, ISO certified, for carriers, tier-one builders and utilities.';
+
+/* The stat band states only what the register can evidence. A fleet count and a maximum reach
+   are deliberately absent until the client confirms them: see OPEN-ITEMS.md. */
+const stats = [
+  { n: since, text: false, l: `Trading since, first as ${company.formerName}` },
+  { n: `${isoShort.length}`, text: false, l: `Certified management systems: ${isoPhrase}` },
+  { n: `${states.length}`, text: false, l: 'States serviced from our depots and by travelling crews' },
+  { n: 'Wet or dry', text: true, l: 'Hire with our operators, or on your own induction' },
+];
+
+const doors = [
+  { href: '/services/', label: 'Services', title: 'Rigging, civils and workshop', photo: 'riggerOnMonopole' as const,
+    text: 'Comms and rigging, civil works, steel fabrication, thermal coating and EWP servicing, for carrier, broadcast and utility sites.' },
+  { href: '/fleet/', label: 'Fleet and hire', title: 'Truck-mounted EWPs, specs published', photo: 'ewpLatticeTower' as const,
+    text: 'Working height, outreach, safe working load and jacking footprint on every unit page. Insulated units, generators and plant.' },
+  { href: '/compliance/', label: 'Safety and compliance', title: 'Everything procurement asks for', photo: 'civilSlabCrew' as const,
+    text: `${isoPhrase} systems, carrier inductions, the training matrix, insurances and the prequalification pack, in one place.` },
+];
+---
+<Base title={company.tradingName} description={description}>
+  <Hero
+    variant="home"
+    eyebrow={`Telecommunications infrastructure${since ? ` · since ${since}` : ''}`}
+    title={company.statement}
+    lead={`${company.tagline} ${heroLead}`}
+    image={photos.fleetLineupSunset}
+  >
+    <div class="btn-row hero__actions">
+      <a class="btn btn--primary" href="/capability-statement/">Capability statement</a>
+      <a class="btn btn--secondary" href="/contact/">Contact a depot</a>
+    </div>
+    <nav class="quicklinks" aria-label="Start here" slot="foot">
+      <div class="container quicklinks__row">
+        {doors.map((d) => (
+          <a class="quicklinks__item" href={d.href}>
+            <span>{d.label}</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        ))}
+      </div>
+    </nav>
+  </Hero>
+
+  <section class="section section--tight section--white">
+    <div class="container">
+      <ul class="statband reveal" aria-label="Company facts">
+        {stats.map((s) => (
+          <li>
+            <span class:list={["statband__n", { "statband__n--text": s.text }]}>{s.n}</span>
+            <span class="statband__l">{s.l}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">What we do</p>
+        <h2>Three capabilities, one accountable contractor</h2>
+        <p class="lead">Most programmes need a mix: crews to build and maintain a site, civils to prepare it, and platforms to reach it. We run all three under one management system, so scope, safety and scheduling sit with one team.</p>
+      </div>
+      <div class="grid grid--3 reveal">
+        {doors.map((d) => (
+          <a class="media-card" href={d.href}>
+            <div class="media-card__media">
+              <Image src={photos[d.photo]} alt={alts[d.photo]} widths={[420, 800]} sizes="(min-width: 900px) 33vw, 100vw" />
+            </div>
+            <div class="media-card__body">
+              <span class="media-card__label">{d.label}</span>
+              <h3 class="media-card__title">{d.title}</h3>
+              <p>{d.text}</p>
+              <span class="arrow-link">Read more</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.towerErection} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Programmes</p>
+        <h2>Work delivered for the carriers and the tier ones</h2>
+        <p class="lead">The programmes and clients named in our capability statement. Site references are provided in tender responses with each client's consent.</p>
+        <ul class="tags" aria-label="Programmes">
+          {programmes.current.map((p) => <li><span class="chip chip--onink">{p}</span></li>)}
+        </ul>
+        <p class="feature__note">Past work for {listJoin(programmes.pastClients)}.</p>
+        <a class="arrow-link" href="/projects/">Programmes and projects</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Fleet</p>
+        <h2>The specifications are on the page, not in a brochure</h2>
+        <p class="lead">
+          Every unit has its own page with working height, outreach, safe working load, chassis, transport dimensions and jacking footprint.
+          {top && top.status === 'on-order' ? ` The tallest unit on the register, the ${top.name}, is on order.` : ''}
+        </p>
+      </div>
+      <div class="reveal">
+        <FleetTable units={fleet} caption="Selected in-service units" />
+        <p class="mt"><a class="arrow-link" href="/fleet/">Full fleet register</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Where we work</p>
+        <h2>Depots in {listJoin(depotStates.map((s) => stateNames[s] ?? s))}, crews nationwide</h2>
+        <p class="lead">{whereLead}</p>
+      </div>
+      <div class="mapsplit reveal">
+        <div class="mapsplit__map"><CoverageMap /></div>
+        <div class="mapsplit__list">
+          {depots.map((d) => (
+            <a class="depotrow" href={`/locations/${d.id}/`}>
+              <span class="depotrow__state">{d.data.state}</span>
+              <span class="depotrow__body">
+                <span class="depotrow__name">{d.data.name}</span>
+                <span class="depotrow__addr">{[d.data.street, `${d.data.suburb} ${d.data.state} ${d.data.postcode ?? ''}`.trim()].filter(Boolean).join(', ')}</span>
+              </span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          ))}
+          <a class="arrow-link" href="/locations/">All depots and coverage</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="split split--wide-text">
+        <div class="reveal">
+          <div class="section-head__rule"></div>
+          <p class="eyebrow">Compliance</p>
+          <h2>Prequalified, inducted and certified</h2>
+          <p>Every site based employee holds the tower rescue, working at heights, first aid and carrier inductions listed in our training matrix. Certificates, insurances and policies are issued as one prequalification pack.</p>
+          <ul class="ticks">
+            {training.specialist.map((t) => <li>{t}</li>)}
+          </ul>
+          <a class="arrow-link" href="/compliance/">Safety, quality and compliance</a>
+        </div>
+        <figure class="figure figure--wide cut reveal">
+          <Image src={photos.basketOnMonopole} alt={alts.basketOnMonopole} widths={[500, 900]} sizes="(min-width: 900px) 45vw, 100vw" />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  {news.length > 0 && (
+    <section class="section section--mist">
+      <div class="container">
+        <div class="section-head reveal">
+          <div class="section-head__rule"></div>
+          <p class="eyebrow">News</p>
+          <h2>Recent</h2>
+        </div>
+        <div class="grid grid--2 reveal">
+          {news.map((n) => (
+            <article class="newscard">
+              <span class="newscard__meta">{n.data.date.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}{n.data.source ? ` · ${n.data.source}` : ''}</span>
+              <h3 class="newscard__title"><a href={`/about/news/${n.id}/`}>{n.data.title}</a></h3>
+              <p>{n.data.summary}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <CtaBand />
+</Base>
+
+<style>
+  .hero__actions { margin-top: 2rem; }
+
+  /* Quick links sit on the bottom edge of the hero, the "start here" bar the sector uses. */
+  .quicklinks { position: relative; margin-top: clamp(2rem, 5vw, 3.5rem); border-top: 1px solid rgba(255,255,255,.18); }
+  .quicklinks__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .quicklinks__item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; padding: 0.85rem 0; color: var(--white); text-decoration: none; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-dense); }
+  .quicklinks__row > * + * { border-left: 1px solid rgba(255,255,255,.18); padding-left: clamp(1rem, 2vw, 1.75rem); }
+  .quicklinks__item svg { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; transition: transform .25s ease; }
+  .quicklinks__item:hover { color: var(--quantum-green); }
+  .quicklinks__item:hover svg { transform: translateX(4px); }
+  @media (max-width: 700px) {
+    .quicklinks__row > * + * { border-left: 0; padding-left: 0; border-top: 1px solid rgba(255,255,255,.18); }
+  }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 60ch; }
+  .feature__note { color: var(--on-ink-quiet); font-size: var(--fs-dense); }
+  .tags { list-style: none; padding: 0; margin: 1.5rem 0 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem; max-width: none; }
+  .tags li { margin: 0; }
+  .chip--onink { background: rgba(255,255,255,.1); color: #E4E8EA; border: 1px solid rgba(255,255,255,.2); white-space: normal; }
+
+  /* Coverage map beside a list of depots, each row a target. */
+  .mapsplit { display: grid; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; grid-template-columns: minmax(0, 1fr); }
+  .mapsplit > * { min-width: 0; }
+  @media (min-width: 1000px) { .mapsplit { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+  /* The map's easternmost pin label paints past the drawing, so the column keeps a gutter. */
+  .mapsplit__map { padding-right: 12%; }
+  .mapsplit__list { display: flex; flex-direction: column; gap: 0; }
+  .depotrow { display: flex; align-items: center; gap: 1rem; padding: 1.15rem 0; border-top: 1px solid var(--concrete); text-decoration: none; color: inherit; }
+  .depotrow:last-of-type { border-bottom: 1px solid var(--concrete); margin-bottom: 1.25rem; }
+  .depotrow__state { font-family: var(--font-display); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--steel); flex: 0 0 2.5rem; }
+  .depotrow__body { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; flex: 1; }
+  .depotrow__name { font-family: var(--font-display); font-weight: 600; color: var(--ink); }
+  .depotrow__addr { font-size: var(--fs-caption); color: var(--steel); }
+  .depotrow svg { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; color: var(--deep-green); transition: transform .25s ease; }
+  .depotrow:hover { color: inherit; }
+  .depotrow:hover .depotrow__name { color: var(--deep-green); }
+  .depotrow:hover svg { transform: translateX(4px); }
+
+  .ticks { list-style: none; padding: 0; margin: 1.25rem 0 1.5rem; display: grid; gap: 0.6rem; }
+  .ticks li { position: relative; padding-left: 1.9rem; margin: 0; }
+  .ticks li::before { content: ''; position: absolute; left: 0; top: 0.42em; width: 1.1rem; height: 0.62rem; border-left: 2.5px solid var(--quantum-green); border-bottom: 2.5px solid var(--quantum-green); transform: rotate(-45deg); }
+
+  .newscard { display: flex; flex-direction: column; gap: 0.6rem; padding-top: 1.25rem; border-top: 2px solid var(--ink); min-width: 0; }
+  .newscard__meta { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--steel); }
+  .newscard__title { font-size: var(--fs-h4); margin: 0; }
+  .newscard__title a { color: var(--ink); text-decoration: none; }
+  .newscard__title a:hover { color: var(--deep-green); }
+  .newscard p { margin: 0; }
+
+  .mt { margin-top: 1.5rem; }
+</style>

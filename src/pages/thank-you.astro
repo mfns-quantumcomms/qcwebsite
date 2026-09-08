@@ -1,0 +1,95 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import { company } from '@data/company';
+
+const description = 'Confirmation that your enquiry has reached Quantum Comms, your reference number, what happens next and when to expect a reply during business hours.';
+const lead = `We reply during business hours, ${company.hours}. If it is urgent, call ${company.phoneMain.display}.`;
+---
+<Base title="Thank you" description={description} noindex={true}>
+  <Hero variant="page" eyebrow="Enquiry received" title="Thanks, your enquiry has reached us" lead={lead}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Contact', href: '/contact/' }, { label: 'Thank you' }]} />
+    <p class="ref" data-ref hidden>Your reference is <strong class="ref__code" data-ref-value></strong>. Quote it if you call or email about this enquiry.</p>
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container split split--wide-text">
+      <div class="reveal">
+        <div class="section-head__rule" aria-hidden="true"></div>
+        <h2>What happens next</h2>
+        <ol class="steps">
+          <li><strong>It lands with the right desk.</strong> The topic you chose routes the enquiry to hire, works, tenders, HSEQ or careers.</li>
+          <li><strong>You get an acknowledgement.</strong> An email quoting your reference goes to the address you gave. If it has not arrived, check your junk folder or call us with the reference.</li>
+          <li><strong>We come back with questions or a quote.</strong> For hire, that means unit availability, operator, access and ground conditions. For works, we price from your design pack or scope. For prequalification, we send the pack or ask which format your panel needs.</li>
+        </ol>
+        <p>If you sent something by mistake, or need to add a detail, reply to the acknowledgement email or send a second enquiry quoting the reference.</p>
+      </div>
+      <aside class="card contact-card reveal" aria-labelledby="hours-h">
+        <h3 id="hours-h">Hours and urgent contact</h3>
+        <p class="contact-card__hours">{company.hours}</p>
+        <p class="contact-card__lines">
+          <a href={`tel:${company.phoneMain.tel}`}><span class="visually-hidden">Call </span>{company.phoneMain.display}</a><br />
+          <a href={`tel:${company.phoneMobile.tel}`}><span class="visually-hidden">Call mobile </span>{company.phoneMobile.display}</a><br />
+          <a href={`mailto:${company.email}`}>{company.email}</a>
+        </p>
+        <p class="notice notice--info">{company.afterHours}</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section section--dark">
+    <div class="container reveal">
+      <div class="wait__head">
+        <div class="section-head__rule" aria-hidden="true"></div>
+        <h2>While you wait</h2>
+        <p class="lead">Most of what a procurement or site team needs is already on the site.</p>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn--secondary" href="/fleet/">Fleet register</a>
+        <a class="btn btn--secondary" href="/services/">Services</a>
+        <a class="btn btn--secondary" href="/compliance/">Compliance</a>
+        <a class="btn btn--secondary" href="/capability-statement/">Capability statement</a>
+        <a class="arrow-link" href="/">Back to the home page</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // The reference is generated server-side on submit and passed back as ?ref=. Shown only if it looks like ours.
+  const ref = new URLSearchParams(window.location.search).get('ref') ?? '';
+  const wrap = document.querySelector<HTMLElement>('[data-ref]');
+  const out = document.querySelector<HTMLElement>('[data-ref-value]');
+  if (wrap && out && /^[A-Z0-9-]{4,32}$/i.test(ref)) {
+    out.textContent = ref.toUpperCase();
+    wrap.hidden = false;
+  }
+</script>
+
+<style>
+  /* The reference is the one thing on this page a caller will read out, so it is set on its
+     own rule in the display width rather than boxed in a grey panel. */
+  .ref { margin-top: 1.75rem; padding-top: 1rem; border-top: 2px solid var(--ink); max-width: 44ch; font-size: var(--fs-dense); color: var(--graphite); }
+  /* The page hero becomes a two column grid above 900 px. The reference belongs under both
+     columns, not beside the statement, so it takes the whole row. */
+  @media (min-width: 900px) { .ref { grid-column: 1 / -1; } }
+  .ref__code { font-family: var(--font-display); font-weight: 600; font-stretch: var(--wdth-display); font-size: 1.35rem; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; color: var(--ink); }
+
+  .section-head__rule { margin-bottom: 1.25rem; }
+  .split > * { min-width: 0; }
+  .wait__head { margin-bottom: clamp(1.5rem, 3vw, 2.25rem); }
+  .wait__head h2 { margin-bottom: 0.4rem; }
+  .wait__head .lead { margin: 0; }
+
+  /* Numbered steps: the numeral carries the display width, the way the stat band does. */
+  .steps { list-style: none; padding: 0; margin: 1.5rem 0; counter-reset: step; max-width: var(--measure); }
+  .steps li { counter-increment: step; position: relative; margin: 0; padding: 1.15rem 0 1.15rem 3.25rem; border-top: 1px solid var(--concrete); }
+  .steps li:last-child { border-bottom: 1px solid var(--concrete); }
+  .steps li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 1.05rem; font-family: var(--font-display); font-weight: 600; font-stretch: var(--wdth-display); font-size: 1.25rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--steel); }
+
+  .contact-card__hours { color: var(--steel); font-size: var(--fs-caption); }
+  .contact-card__lines a { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-display); font-weight: 500; color: var(--ink); text-decoration: none; }
+  .contact-card__lines a:hover { color: var(--deep-green); text-decoration: underline; text-underline-offset: 0.15em; }
+  .card .notice { margin: 0.25rem 0 0; }
+</style>

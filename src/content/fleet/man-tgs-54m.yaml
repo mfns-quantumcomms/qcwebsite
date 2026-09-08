@@ -1,0 +1,20 @@
+name: 54 m platform on MAN TGS 33.40 6x6
+shortName: 54 m (MAN 6x6)
+unitClass: truck-mounted
+oem: To be confirmed
+chassis: MAN TGS 33.40 6x6
+workingHeight: 54
+outreach: 40
+swlKg: "600 (320 with upper boom extended)"
+rotation: "500°"
+cage: "Extendable 2.42 to 3.82 × 0.97 m"
+gvwT: 25
+transport: { length: 11.94, width: 2.55, height: 3.99 }
+jacking: { normal: "8.95 m outer edge" }
+licence: HR
+fourWd: true
+status: in-service
+homeDepots: [craigieburn]
+idealFor: [Long outreach over obstacles to 40 m, Rooftop equipment from street level, Greenfield sites with 6x6 access]
+order: 5
+meta: { verified: false, source: "Fleet Portfolio 2019 spec sheet. Client to confirm", lastVerified: null }

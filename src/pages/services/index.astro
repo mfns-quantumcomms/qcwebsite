@@ -1,0 +1,173 @@
+---
+/**
+ * Services hub. Three groups, one media card per service entry, plus a fleet-hire card in the
+ * Hire group, and a full-bleed feature band between the first and second group.
+ * Card content (summary, scope) comes from the services collection; nothing numeric is typed here.
+ */
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import ProofStrip from '@components/ProofStrip.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { photos, alts, type PhotoKey } from '@data/images';
+import { confirmedDepots } from '../../lib/facts';
+import { groupMeta, groupOrder } from './_groups';
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const groups = groupOrder
+  .map((group) => ({ group, meta: groupMeta[group], items: services.filter((s) => s.data.group === group) }))
+  .filter((g) => g.items.length > 0 || g.group === 'Hire');
+
+const depots = await confirmedDepots();
+const depotStates = depots.map((d) => d.data.state).filter((v, i, a) => a.indexOf(v) === i);
+const depotLine = depotStates.length ? `from depots in ${depotStates.join(' and ')}` : 'from our depots';
+
+const photoFor = (key?: string): PhotoKey => (key && key in photos ? (key as PhotoKey) : 'towerErection');
+/** Section grounds alternate so the page has rhythm rather than one flat surface. */
+const grounds = ['section--white', 'section--mist', 'section--white'];
+const description = 'Comms and rigging, civil works, steel fabrication, thermal coating and EWP servicing for carrier, broadcast and utility sites across Australia.';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Quantum Comms services',
+  itemListElement: services.map((s, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: s.data.title,
+    url: new URL(`/services/${s.id}/`, Astro.site).href,
+  })),
+};
+---
+<Base title="Services" description={description} jsonLd={jsonLd}>
+  <Hero
+    variant="photo"
+    eyebrow="What we do"
+    title="Services"
+    lead="Rigging, civils, fabrication, coating and EWP servicing for telecommunications, broadcast and utility networks. One contractor, one set of management systems, and a fleet register you can check."
+    image={photos.basketOnMonopole}
+    imageAlt={alts.basketOnMonopole}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Services' }]} />
+    <div class="btn-row">
+      <a class="btn btn--primary" href="/capability-statement/">Capability statement</a>
+      <a class="btn btn--secondary" href="/fleet/">Fleet register</a>
+    </div>
+  </Hero>
+
+  <section class="section section--tight section--white">
+    <div class="container"><div class="reveal"><ProofStrip /></div></div>
+  </section>
+
+  {groups.map(({ group, meta, items }, gi) => (
+    <>
+      <section class:list={['section', grounds[gi % grounds.length]]} aria-labelledby={`group-${group.toLowerCase()}`}>
+        <div class="container">
+          <div class="section-head section-head--wide reveal">
+            <div class="section-head__rule"></div>
+            <p class="eyebrow">{meta.eyebrow}</p>
+            <h2 id={`group-${group.toLowerCase()}`}>{meta.heading}</h2>
+            <p class="lead">{meta.blurb}</p>
+          </div>
+
+          <div class="grid grid--2 reveal">
+            {items.map((s) => (
+              <a class="media-card" href={`/services/${s.id}/`}>
+                <div class="media-card__media">
+                  <Image src={photos[photoFor(s.data.image)]} alt={alts[photoFor(s.data.image)]} widths={[420, 800]} sizes="(min-width: 900px) 50vw, 100vw" />
+                </div>
+                <div class="media-card__body">
+                  <span class="media-card__label">{group}</span>
+                  <h3 class="media-card__title">{s.data.title}</h3>
+                  <p>{s.data.summary}</p>
+                  <ul class="scopelist">
+                    {s.data.scope.slice(0, 4).map((item) => <li>{item}</li>)}
+                  </ul>
+                  <span class="arrow-link">{s.data.title} in full</span>
+                </div>
+              </a>
+            ))}
+
+            {group === 'Hire' && (
+              <a class="media-card" href="/fleet/">
+                <div class="media-card__media">
+                  <Image src={photos.ewpLatticeTower} alt={alts.ewpLatticeTower} widths={[420, 800]} sizes="(min-width: 900px) 50vw, 100vw" />
+                </div>
+                <div class="media-card__body">
+                  <span class="media-card__label">Fleet and hire</span>
+                  <h3 class="media-card__title">Truck-mounted EWP, plant and generator hire</h3>
+                  <p>Wet or dry hire of truck-mounted platforms, insulated units, generators and civil plant, short or long term, {depotLine}.</p>
+                  <ul class="scopelist">
+                    <li>Working height, outreach, safe working load, chassis and jacking footprint published for each unit</li>
+                    <li>Wet hire with carrier-inducted operators, or dry hire to your inducted operator</li>
+                    <li>Low-voltage insulated unit, generators and civil plant alongside the platforms</li>
+                    <li>Minimum terms, inspections and operator requirements set out on the how hire works page</li>
+                  </ul>
+                  <span class="arrow-link">Fleet register</span>
+                </div>
+              </a>
+            )}
+          </div>
+
+          {meta.links.length > 0 && (
+            <div class="grouplinks reveal">
+              {meta.links.map((l) => <a class="arrow-link" href={l.href}>{l.label}</a>)}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {gi === 0 && (
+        <section class="section section--dark feature">
+          <div class="feature__bg" aria-hidden="true">
+            <Image src={photos.civilSlabCrew} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+          </div>
+          <div class="container feature__inner">
+            <div class="feature__text reveal">
+              <div class="section-head__rule"></div>
+              <p class="eyebrow">Procurement</p>
+              <h2>Checking us before award</h2>
+              <p class="lead">We take work through carrier supplier panels, tier-one subcontracting, utility panels and tenders. Most of what a procurement or HSEQ reviewer needs is already published.</p>
+              <ul class="check">
+                <li><a href="/compliance/">Compliance</a>: certified management systems, training matrix, vehicle safety kit, inductions and the prequalification pack.</li>
+                <li><a href="/capability-statement/">Capability statement</a>: the current statement, generated from the same registers as this site.</li>
+                <li><a href="/fleet/">Fleet register</a>: every unit with its specification and status.</li>
+                <li><a href="/locations/">Locations</a>: confirmed depots and service coverage.</li>
+                <li><a href="/projects/">Projects</a>: programmes named in the capability statement and published case studies.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+    </>
+  ))}
+
+  <CtaBand
+    heading="Need a scope priced, or a pack for procurement?"
+    text="Send the design pack for a price, or request the prequalification pack through the compliance page. Depots answer during business hours."
+    primary={{ label: 'Contact a depot', href: '/contact/' }}
+    secondary={{ label: 'Capability statement', href: '/capability-statement/' }}
+  />
+</Base>
+
+<style>
+  /* The scope under a card summary: quiet, dense, and never a second heading level. */
+  .scopelist { list-style: none; padding: 0; margin: 0.35rem 0 0.25rem; display: grid; gap: 0.4rem; font-size: var(--fs-dense); max-width: none; }
+  .scopelist li { position: relative; padding-left: 1.1rem; margin: 0; color: var(--graphite); min-width: 0; }
+  .scopelist li::before { content: ''; position: absolute; left: 0; top: 0.6em; width: 5px; height: 5px; border-radius: 1px; background: var(--steel); }
+
+  .grouplinks { display: flex; flex-wrap: wrap; gap: 0.25rem 2.25rem; margin-top: clamp(1.5rem, 3vw, 2.5rem); }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 62ch; }
+  .check { max-width: none; margin-top: 1.25rem; }
+  .check li { margin-bottom: 0.6rem; }
+</style>

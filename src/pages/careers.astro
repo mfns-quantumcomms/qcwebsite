@@ -1,0 +1,247 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import DepotCard from '@components/DepotCard.astro';
+import EnquiryForm from '@components/EnquiryForm.astro';
+import { Image } from 'astro:assets';
+import { photos, alts } from '@data/images';
+import { company, training, headlineFacts } from '@data/company';
+import { confirmedDepots, stateNames } from '../lib/facts';
+
+const depots = await confirmedDepots();
+const depotStates = depots.map((d) => d.data.state).filter((v, i, a) => a.indexOf(v) === i);
+const listJoin = (arr: string[]) => (arr.length <= 1 ? arr.join('') : `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`);
+const depotStateNames = listJoin(depotStates.map((s) => stateNames[s] ?? s));
+
+/** Roles we hire for, with the work in plain words. No pay figures anywhere on this page. */
+const roles = [
+  { h: 'Riggers', p: 'Tower, mast and monopole work: erection by crane or gin pole, head frame swap-outs, antenna and feeder installation, restrengthening and decommissions. Advanced rigging is the norm on our crews.' },
+  { h: 'EWP operators', p: 'Drive and operate truck-mounted EWPs on wet hire, set up jacking on tight sites and work the basket with the client\'s crew. Rigging or dogging experience means you can do more than lift.' },
+  { h: 'Civil operators', p: 'Excavators, augers and bored piers, trenching and conduit, slabs, hut foundations and site access on greenfield builds. Rock breaking and remote work are part of it.' },
+  { h: 'Electricians', p: 'Site power, earthing, switchboards and generator or solar connections on greenfield and upgrade sites. Specialist inductions open up HV and rail corridor work.' },
+  { h: 'Technicians', p: 'Installation, testing and commissioning: PIM, sweep, fibre and BER testing, microwave links and handover documentation for carrier and broadcast sites.' },
+  { h: 'Diesel mechanics', p: 'Service and repair of the EWP fleet, trucks and earthmoving plant at the workshop, plus field call-outs to keep units on hire.' },
+  { h: 'Project engineers', p: 'Take a design pack to as-builts: permits, lift and rescue plans, SWMS, materials, client portal reporting and close-out on carrier programmes.' },
+];
+
+const week = [
+  { h: 'Start of day', p: 'Pre-start on the vehicle and plant, check the kit every team leader\'s vehicle carries, run through the SWMS and the day\'s permits with the crew.' },
+  { h: 'On site', p: 'Most days are on a tower, rooftop or greenfield site. Some are in the workshop or the yard. Heights, RF exposure and live plant are the everyday hazards, and the training below is how we manage them.' },
+  { h: 'Away from home', p: 'Crews travel. Metro work is a daily commute; regional and remote programmes mean stints away, planned in advance. Some works run in carrier outage windows, which can mean nights or weekends.' },
+  { h: 'Paperwork that matters', p: 'As-built photos, test results and daily reports go back through the client portal or ours. Training currency is tracked so nobody turns up to a site without a valid induction.' },
+];
+
+/* Figures are counts of entries in the training and depot registers, and the one verified
+   trading year. No headcount, no pay, no fleet count. */
+const stats = [
+  { n: headlineFacts.tradingSince.verified ? headlineFacts.tradingSince.value : null, text: false, l: `Trading since, first as ${company.formerName}` },
+  { n: `${training.everyFieldEmployee.length}`, text: false, l: 'Trainings and inductions every site-based employee holds and keeps current' },
+  { n: `${training.specialist.length}`, text: false, l: 'Specialist inductions carried on selected crews' },
+  { n: `${depots.length}`, text: false, l: `Depots and yards to work out of, in ${depotStateNames}` },
+].filter((s) => s.n);
+
+const description = 'Who Quantum Comms hires: riggers, EWP operators, civil operators, electricians, technicians, mechanics and engineers, the tickets needed, and how to apply.';
+---
+<Base title="Careers" description={description}>
+  <Hero variant="photo" eyebrow="Careers" title="Work at height, on the ground and in the workshop" lead="We hire the trades that build and maintain telecommunications sites and the people who keep the fleet running. If you hold the tickets and want steady project work across Australia, tell us." image={photos.basketOnMonopole} imageAlt={alts.basketOnMonopole}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Careers' }]} />
+    <div class="btn-row hero__actions">
+      <a class="btn btn--primary" href="/careers/#enquiry">Register your interest</a>
+      <a class="btn btn--secondary" href="/compliance/">Training and inductions</a>
+    </div>
+  </Hero>
+
+  <section class="section section--tight section--white">
+    <div class="container">
+      <ul class="statband reveal" aria-label="What the job involves">
+        {stats.map((s) => (
+          <li>
+            <span class:list={["statband__n", { "statband__n--text": s.text }]}>{s.n}</span>
+            <span class="statband__l">{s.l}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Roles</p>
+        <h2>Who we hire</h2>
+        <p class="lead">We do not list individual vacancies here. Send an expression of interest for any of these roles and we will come back to you if there is a fit now or on the next programme.</p>
+      </div>
+      <div class="grid grid--3 reveal">
+        {roles.map((r) => (
+          <div class="card">
+            <h3>{r.h}</h3>
+            <p>{r.p}</p>
+          </div>
+        ))}
+      </div>
+      <p class="roles__note reveal">We also employ scaffolders, electrical spotters, transmission line workers, project managers and warehouse staff. Apprentices and trainees are considered where a crew can supervise them properly.</p>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="split split--wide-text">
+        <div class="reveal">
+          <div class="section-head section-head--wide colhead">
+            <div class="section-head__rule"></div>
+            <p class="eyebrow">Licences and tickets</p>
+            <h2>What you typically need</h2>
+            <p class="lead">Every site-based employee holds the training below as a minimum, and keeps it current on the cycle shown. If you are missing one, say so in your expression of interest; some can be arranged at the start.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>Minimum training for every site-based employee, with renewal cycle</caption>
+              <thead>
+                <tr><th scope="col">Training or induction</th><th scope="col">Renewal</th></tr>
+              </thead>
+              <tbody>
+                {training.everyFieldEmployee.map(([name, cycle]) => (
+                  <tr><th scope="row">{name}</th><td>{cycle}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figure class="figure figure--wide reveal"><Image src={photos.riggerOnMonopole} alt={alts.riggerOnMonopole} widths={[500, 900]} sizes="(min-width: 860px) 45vw, 100vw" /></figure>
+      </div>
+
+      <div class="grid grid--3 tickets reveal">
+        <div class="card">
+          <h3>EWP operators</h3>
+          <p>Truck-mounted units need a heavy vehicle licence as well as platform competency. Operators on our fleet hold:</p>
+          <ul class="tickets__list">
+            {training.operatorCredentials.map((c) => <li>{c}</li>)}
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Riggers and civil operators</h3>
+          <p>Rigging licence at the class your role needs, with advanced rigging preferred for tower crews. Civil operators hold the plant competencies for the machines they run, plus a current driver licence for the vehicle class.</p>
+        </div>
+        <div class="card">
+          <h3>Specialist sites</h3>
+          <p>Some programmes need extra inductions, which we hold on selected crews:</p>
+          <ul class="tickets__list">
+            {training.specialist.map((s) => <li>{s}</li>)}
+          </ul>
+        </div>
+      </div>
+      <p class="caption tickets__note">Source: {training.source}. The full training matrix and the vehicle safety kit are on the <a href="/compliance/">compliance page</a>.</p>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.ewpHilltop} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">The job</p>
+        <h2>What a week looks like</h2>
+        <dl class="week">
+          {week.map((w) => (
+            <div class="week__item">
+              <dt>{w.h}</dt>
+              <dd>{w.p}</dd>
+            </div>
+          ))}
+        </dl>
+        <a class="arrow-link" href="/careers/#enquiry">Register your interest</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Depots</p>
+        <h2>Where you would be based</h2>
+        <p class="lead">Crews and units work out of these depots. Head office and the fleet yard are in {company.hqAddress.state}; crews mobilise from the nearest depot and travel for regional and remote programmes.</p>
+      </div>
+      <div class="grid grid--3 depots reveal">
+        {depots.map((d) => <DepotCard depot={d} />)}
+      </div>
+      <p class="caption depots__note">Depots in other states are being confirmed and will be listed on the <a href="/locations/">locations page</a> as they are.</p>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="split split--wide-text apply">
+        <div class="reveal">
+          <div class="section-head section-head--wide colhead">
+            <div class="section-head__rule"></div>
+            <p class="eyebrow">Apply</p>
+            <h2>Register your interest</h2>
+            <p class="lead">Use the form to tell us about yourself. There is no application portal; a person reads every message.</p>
+          </div>
+          <p>Include in your message:</p>
+          <ul class="checklist">
+            <li>the role or roles you are after, and where you are based</li>
+            <li>your licences and tickets, with expiry dates where you know them</li>
+            <li>carrier inductions you currently hold</li>
+            <li>the kind of work you have done, and for whom</li>
+            <li>when you could start, and whether you can travel</li>
+          </ul>
+          <p class="caption">Do not attach or paste licence numbers, certificates or identity documents. We ask for them at interview and handle them under our <a href="/privacy/">privacy policy</a>.</p>
+        </div>
+        <div class="reveal">
+          <EnquiryForm topic="careers" heading="Expression of interest" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand heading="Prefer to talk first?" text="Call the head office during business hours and ask for the crew supervisor for your trade, or drop into a depot with your tickets." primary={{ label: 'Contact a depot', href: '/contact/' }} secondary={{ label: 'Training and inductions', href: '/compliance/' }} />
+</Base>
+
+<style>
+  .hero__actions { margin-top: 2rem; }
+  .split > *, .grid > * { min-width: 0; }
+  .table-wrap { min-width: 0; }
+
+  /* Column heads inside a split need less air than a full section head. */
+  .colhead { margin-bottom: clamp(1.5rem, 3vw, 2rem); }
+
+  .roles__note { margin: clamp(1.75rem, 4vw, 2.5rem) 0 0; }
+
+  /* Depot cards carry an email address and a street address, so long strings must break. */
+  .depots :global(a), .depots :global(address) { overflow-wrap: anywhere; }
+  .depots__note { display: block; margin-top: clamp(1.25rem, 3vw, 1.75rem); }
+
+  .tickets { margin-top: clamp(1.75rem, 4vw, 2.5rem); }
+  .tickets__list { margin: 0; padding-left: 1.1rem; }
+  .tickets__list li { margin-bottom: 0.3rem; }
+  .tickets__note { display: block; margin-top: 1.25rem; max-width: var(--measure); }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.9) 46%, rgba(21,25,28,.62) 100%); }
+  .feature__inner { position: relative; }
+  .feature__text { max-width: 60ch; }
+
+  .week { margin: clamp(1.5rem, 3vw, 2.25rem) 0 1.5rem; display: grid; gap: 0; max-width: none; }
+  .week__item { padding: 1rem 0; border-top: 1px solid var(--rule-on-ink); min-width: 0; }
+  .week__item:last-child { border-bottom: 1px solid var(--rule-on-ink); }
+  .week__item dt { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; color: var(--white); margin-bottom: 0.2rem; }
+  .week__item dd { margin: 0; color: var(--on-ink); max-width: var(--measure); overflow-wrap: anywhere; }
+
+  /* Same treatment as the checklist on the insulated page, so one class reads one way sitewide. */
+  .checklist { list-style: none; padding: 0; margin: 0 0 1.25rem; display: grid; gap: 0.8rem 3rem; max-width: none; }
+  .checklist > * { min-width: 0; }
+  .checklist li { position: relative; padding-left: 1.6rem; margin: 0; }
+  .checklist li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 0.55rem; height: 0.55rem; border-radius: 2px; background: var(--deep-green); }
+  .apply { align-items: start; }
+</style>

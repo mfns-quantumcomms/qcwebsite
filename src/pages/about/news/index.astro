@@ -1,0 +1,169 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { getCollection } from 'astro:content';
+import { photos, alts } from '@data/images';
+import { company } from '@data/company';
+
+const news = (await getCollection('news')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const fmtDate = (d: Date) => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const kindLabel: Record<string, string> = { press: 'Press coverage', company: 'Company news' };
+const pending = news.filter((n) => !n.data.url).length;
+const [latest, ...rest] = news;
+
+const description = 'Press coverage and company announcements from Quantum Comms: fleet orders, new equipment and programme news, with the source and date of each report.';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${company.tradingName} news`,
+  url: `${company.siteUrl}/about/news/`,
+  description,
+  isPartOf: { '@type': 'WebSite', url: company.siteUrl, name: company.tradingName },
+  about: { '@id': `${company.siteUrl}/#organization` },
+  hasPart: news.map((n) => ({
+    '@type': n.data.kind === 'press' ? 'NewsArticle' : 'Article',
+    headline: n.data.title,
+    datePublished: n.data.date.toISOString().slice(0, 10),
+    url: `${company.siteUrl}/about/news/${n.id}/`,
+  })),
+};
+---
+<Base title="News" description={description} jsonLd={jsonLd}>
+  <Hero variant="photo" eyebrow="About" title="News" lead="Trade press coverage and company announcements, newest first. Each entry names its source and date so you can check it." image={photos.ewpCityFacade} imageAlt={alts.ewpCityFacade}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'About', href: '/about/' }, { label: 'News' }]} />
+  </Hero>
+
+  {news.length === 0 ? (
+    <section class="section section--white">
+      <div class="container">
+        <p class="notice notice--info">There are no news entries yet. Company announcements and press coverage will be listed here as they are published.</p>
+      </div>
+    </section>
+  ) : (
+    <>
+      <section class="section section--white">
+        <div class="container">
+          <div class="section-head section-head--wide reveal">
+            <div class="section-head__rule"></div>
+            <p class="eyebrow">Latest</p>
+            <h2>{kindLabel[latest.data.kind]}</h2>
+          </div>
+          <article class="lede lede--split reveal">
+            <p class="dateline">
+              <time datetime={latest.data.date.toISOString().slice(0, 10)}>{fmtDate(latest.data.date)}</time>
+              {latest.data.source && <span class="dateline__src"><span class="dateline__by">{latest.data.kind === 'press' ? 'Reported by' : 'Source'}</span> <strong>{latest.data.source}</strong></span>}
+            </p>
+            <h3 class="lede__title"><a href={`/about/news/${latest.id}/`}>{latest.data.title}</a></h3>
+            <p class="lead">{latest.data.summary}</p>
+            <div class="linkrow">
+              <a class="arrow-link" href={`/about/news/${latest.id}/`}>Read the entry</a>
+              {latest.data.url ? (
+                <a class="arrow-link" href={latest.data.url} rel="noopener" target="_blank">Original article<span class="visually-hidden"> (opens in a new tab)</span></a>
+              ) : (
+                <span class="caption pending">Original link pending</span>
+              )}
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {rest.length > 0 && (
+        <section class="section section--mist">
+          <div class="container">
+            <div class="section-head reveal">
+              <div class="section-head__rule"></div>
+              <p class="eyebrow">Archive</p>
+              <h2>Earlier entries</h2>
+            </div>
+            <ol class="news news--grid reveal" aria-label="Earlier news entries, newest first">
+              {rest.map((n) => (
+                <li class="news__item">
+                  <p class="dateline">
+                    <span class={`chip ${n.data.kind === 'press' ? 'chip--navy' : 'chip--green'}`}>{kindLabel[n.data.kind]}</span>
+                    <time datetime={n.data.date.toISOString().slice(0, 10)}>{fmtDate(n.data.date)}</time>
+                    {n.data.source && <span class="dateline__src"><span class="dateline__by">{n.data.kind === 'press' ? 'Reported by' : 'Source'}</span> <strong>{n.data.source}</strong></span>}
+                  </p>
+                  <h3 class="news__title"><a href={`/about/news/${n.id}/`}>{n.data.title}</a></h3>
+                  <p>{n.data.summary}</p>
+                  <div class="linkrow">
+                    <a class="arrow-link" href={`/about/news/${n.id}/`}>Read the entry</a>
+                    {n.data.url ? (
+                      <a class="arrow-link" href={n.data.url} rel="noopener" target="_blank">Original article<span class="visually-hidden"> (opens in a new tab)</span></a>
+                    ) : (
+                      <span class="caption pending">Original link pending</span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
+
+      {pending > 0 && (
+        <section class="section section--tight section--white">
+          <div class="container noticesplit">
+            <p class="notice">Links to the original articles are being confirmed with the publishers before launch. Until then, entries name the publication and date but do not link out. Figures quoted in third-party coverage are the publishers' own.</p>
+            <p class="noticesplit__aside">Press enquiries and permission to reproduce: <a href="/contact/">contact the office</a>.</p>
+          </div>
+        </section>
+      )}
+    </>
+  )}
+
+  <CtaBand heading="Want to verify something you read?" text="Fleet units named in the press are listed on the register with their status. For anything else, the capability statement and the depot contacts are the quickest route." primary={{ label: 'Fleet register', href: '/fleet/' }} secondary={{ label: 'Contact a depot', href: '/contact/' }} />
+</Base>
+
+<style>
+  /* Dateline: the line every newsroom puts above a headline. Date, then who reported it.
+     Only the labels take the uppercase treatment; a publication keeps the name it prints. */
+  .dateline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1.25rem; margin: 0 0 0.75rem; max-width: none; font-family: var(--font-display); font-size: var(--fs-caption); color: var(--steel); }
+  .dateline time, .dateline__by { font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+  .dateline strong { color: var(--ink); font-weight: 600; }
+  .dateline__src { min-width: 0; overflow-wrap: anywhere; }
+
+  /* Lead story: the newest entry, set large, above a hairline. */
+  .lede { border-top: 2px solid var(--ink); padding-top: clamp(1.25rem, 3vw, 1.75rem); max-width: 62ch; min-width: 0; }
+  .lede__title { font-size: var(--fs-h2); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 0.6rem; }
+  .lede__title a { color: var(--ink); text-decoration: none; }
+  .lede__title a:hover { color: var(--deep-green); }
+  .lede .lead { margin-bottom: 0.5rem; }
+
+  .news { list-style: none; margin: 0; padding: 0; max-width: none; display: grid; gap: 0; }
+  .news__item { min-width: 0; padding: clamp(1.25rem, 3vw, 1.75rem) 0; border-top: 1px solid var(--concrete); max-width: 62ch; }
+  .news__item:first-child { border-top: 2px solid var(--ink); }
+  .news__item:last-child { border-bottom: 1px solid var(--concrete); }
+  .news__title { font-size: var(--fs-h4); margin: 0 0 0.5rem; }
+  .news__title a { color: var(--ink); text-decoration: none; }
+  .news__title a:hover { color: var(--deep-green); }
+  .news__item p { margin: 0; }
+
+  .linkrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1.75rem; margin-top: 0.35rem; }
+  .pending { display: inline-flex; align-items: center; min-height: 44px; }
+  /* Entries pair up on a wide screen instead of running one per row. */
+  .news--grid { display: grid; gap: clamp(1.5rem, 3vw, 2.5rem); grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+  .news--grid > * { min-width: 0; }
+  /* A short list would otherwise leave half the row empty, so each entry splits across it:
+     dateline and headline on the left, the summary and its links on the right. */
+  @media (min-width: 900px) {
+    .news--grid { grid-template-columns: minmax(0, 1fr); }
+    .news--grid .news__item { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(2rem, 4vw, 4rem); align-items: start; }
+    .news--grid .news__item > .dateline { grid-column: 1; grid-row: 1; }
+    .news--grid .news__item > .news__title { grid-column: 1; grid-row: 2; margin: 0; }
+    .news--grid .news__item > p { grid-column: 2; grid-row: 1 / span 2; max-width: 46ch; margin: 0; }
+    .news--grid .news__item > .linkrow { grid-column: 2; grid-row: 3; margin-top: 1rem; }
+  }
+  .noticesplit { display: grid; gap: clamp(1rem, 3vw, 2.5rem); align-items: center; }
+  @media (min-width: 900px) { .noticesplit { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+  .noticesplit__aside { margin: 0; color: var(--steel); font-size: var(--fs-dense); }
+  /* The lead entry uses the row rather than sitting in a narrow column beside empty space. */
+  @media (min-width: 900px) {
+    .lede--split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(2rem, 4vw, 4rem); align-items: start; max-width: none; }
+    .lede--split > .dateline { grid-column: 1; grid-row: 1; }
+    .lede--split > .lede__title { grid-column: 1; grid-row: 2; margin: 0; }
+    .lede--split > .lead { grid-column: 2; grid-row: 1 / span 2; margin: 0; max-width: 46ch; }
+    .lede--split > .linkrow { grid-column: 2; grid-row: 3; margin-top: 1.25rem; }
+  }
+</style>

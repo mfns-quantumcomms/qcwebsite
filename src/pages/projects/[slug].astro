@@ -1,0 +1,177 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import { photos, alts, type PhotoKey } from '@data/images';
+import { company } from '@data/company';
+
+/** Only client-approved case studies get a page. Unpublished entries stay out of the build. */
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', ({ data }) => data.published === true);
+  return projects.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+interface Props { entry: CollectionEntry<'projects'> }
+const { entry } = Astro.props as Props;
+const { Content } = await render(entry);
+const d = entry.data;
+const key: PhotoKey | null = d.image && d.image in photos ? (d.image as PhotoKey) : null;
+const imageAlt = d.imageAlt ?? (key ? alts[key] : '');
+
+/** Other published case studies, so a reader can keep going. */
+const others = (await getCollection('projects', ({ data }) => data.published === true))
+  .filter((p) => p.id !== entry.id)
+  .sort((a, b) => (b.data.year ?? '').localeCompare(a.data.year ?? '') || a.data.title.localeCompare(b.data.title))
+  .slice(0, 3);
+
+/** Meta description must sit between 120 and 160 characters; summaries vary, so trim or extend, then trim again. */
+function clamp(s: string): string {
+  let out = s.trim();
+  if (out.length > 160) {
+    out = out.slice(0, 157);
+    out = out.slice(0, Math.max(out.lastIndexOf(' '), 100)).replace(/[,;:]$/, '') + '…';
+  }
+  return out;
+}
+let description = clamp(d.summary);
+if (description.length < 120) description = clamp(`${description} Case study, ${company.tradingName}${d.state ? `, ${d.state}` : ''}.`);
+const pageUrl = `${company.siteUrl}/projects/${entry.id}/`;
+
+const facts = (
+  [
+    ['Client', d.client ?? ''],
+    ['Programme', d.programme ?? ''],
+    ['State', d.state ?? ''],
+    ['Services', d.services.join(', ')],
+    ['Year', d.year ?? ''],
+  ] as Array<[string, string]>
+).filter(([, v]) => v !== '');
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.summary,
+  url: pageUrl,
+  mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+  inLanguage: 'en-AU',
+  author: { '@id': `${company.siteUrl}/#organization` },
+  publisher: { '@id': `${company.siteUrl}/#organization` },
+  ...(d.year ? { datePublished: d.year } : {}),
+  ...(key ? { image: `${company.siteUrl}${photos[key].src}` } : {}),
+  keywords: [d.programme, d.client, ...d.services].filter(Boolean).join(', '),
+};
+---
+<Base title={d.title} description={description} jsonLd={jsonLd}>
+  {key ? (
+    <Hero variant="photo" eyebrow="Case study" title={d.title} lead={d.summary} image={photos[key]} imageAlt={imageAlt}>
+      <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Projects', href: '/projects/' }, { label: d.title }]} />
+    </Hero>
+  ) : (
+    <Hero variant="page" eyebrow="Case study" title={d.title} lead={d.summary}>
+      <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Projects', href: '/projects/' }, { label: d.title }]} />
+    </Hero>
+  )}
+
+  <section class="section section--white">
+    <div class="container study">
+      <aside class="card study__facts reveal" aria-labelledby="facts-h">
+        <span class="study__label">Case study</span>
+        <h2 id="facts-h" class="study__facts-h">At a glance</h2>
+        {facts.length > 0 ? (
+          <dl class="spec">
+            {facts.map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+          </dl>
+        ) : (
+          <p class="caption">Client, programme and dates are withheld at the client's request.</p>
+        )}
+        {d.services.length > 0 && (
+          <ul class="tags" aria-label="Services delivered">
+            {d.services.map((s) => <li><span class="chip chip--green">{s}</span></li>)}
+          </ul>
+        )}
+        <p class="caption study__consent">Published with the client's approval. Site references for tenders are available through the <a href="/compliance/">prequalification pack</a>.</p>
+      </aside>
+      <article class="study__body reveal">
+        <div class="section-head__rule study__rule"></div>
+        <div class="prose">
+          <Content />
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">More work</p>
+        <h2>{others.length > 0 ? 'Other case studies' : 'Programmes and past work'}</h2>
+      </div>
+      {others.length > 0 && (
+        <ul class="more reveal" aria-label="Other published case studies">
+          {others.map((p) => (
+            <li class="more__item">
+              <a class="more__link" href={`/projects/${p.id}/`}>
+                <span class="more__meta">{[p.data.state, p.data.year].filter(Boolean).join(' · ') || 'Case study'}</span>
+                <span class="more__title">{p.data.title}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p class="more__all"><a class="arrow-link" href="/projects/">All projects</a></p>
+    </div>
+  </section>
+
+  <CtaBand heading="Similar scope on your programme?" text="Send the design pack or a site list and the nearest depot will price it. Our capability statement lists the fleet, crews and inductions behind this work." primary={{ label: 'Contact a depot', href: '/contact/' }} secondary={{ label: 'Capability statement', href: '/capability-statement/' }} />
+</Base>
+
+<style>
+  .study { display: grid; gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+  .study > * { min-width: 0; }
+  @media (min-width: 860px) { .study { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); } }
+
+  /* Text only, so the plain card is right here. The label and the rule do the work. */
+  .study__facts { position: sticky; top: 1rem; gap: 0.85rem; }
+  .study__label { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); }
+  .study__facts-h { font-size: var(--fs-h4); margin: 0; }
+  .study__consent { margin: 0; }
+
+  .tags { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; max-width: none; }
+  .tags li { margin: 0; min-width: 0; }
+  /* Service names run to several words, so these chips wrap rather than force the page wide. */
+  .tags .chip { white-space: normal; }
+
+  /* The facts list stacks below 480 px so a long client or programme name cannot overflow. */
+  .spec { grid-template-columns: minmax(0, max-content) minmax(0, 1fr); margin: 0; }
+  .spec dt, .spec dd { overflow-wrap: anywhere; }
+  @media (max-width: 480px) {
+    .spec { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .spec dt { margin-top: 0.6rem; }
+    .spec dt:first-of-type { margin-top: 0; }
+  }
+
+  .study__body { max-width: var(--measure); overflow-wrap: anywhere; }
+  .study__rule { margin-bottom: 1.75rem; }
+
+  .more { list-style: none; margin: 0 0 1.25rem; padding: 0; max-width: none; display: grid; gap: 0; }
+  .more__item { margin: 0; min-width: 0; }
+  .more__link { display: flex; align-items: center; gap: 1rem; padding: 1.15rem 0; border-top: 1px solid var(--concrete); text-decoration: none; color: inherit; min-width: 0; }
+  .more__item:first-child .more__link { border-top: 2px solid var(--ink); }
+  .more__item:last-child .more__link { border-bottom: 1px solid var(--concrete); }
+  .more__meta { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--steel); flex: 0 0 auto; }
+  .more__title { font-family: var(--font-display); font-weight: 600; color: var(--ink); flex: 1 1 auto; min-width: 0; }
+  .more__link svg { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; color: var(--deep-green); transition: transform .25s ease; }
+  .more__link:hover .more__title { color: var(--deep-green); }
+  .more__link:hover svg { transform: translateX(4px); }
+  @media (max-width: 620px) {
+    .more__link { flex-wrap: wrap; gap: 0.25rem 1rem; }
+    .more__meta { flex: 1 0 100%; }
+  }
+  .more__all { margin: 0; }
+</style>

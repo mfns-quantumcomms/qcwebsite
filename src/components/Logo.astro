@@ -1,0 +1,118 @@
+---
+/**
+ * Quantum Comms logo system, per Brand Guidelines 2026 (Brand Kit v2), section 03.
+ *
+ * Mark: the geometric Q. The ring is the old handset outline resolved to a circle, the tail is
+ * set at 45 degrees to read as a boom, and the single arc carries the signal. One stroke weight,
+ * one colour. It is drawn from the kit's own construction and must not be redrawn or restyled.
+ *
+ * Lockups: primary (>= 140 px wide), stacked (>= 64 px), mark alone (>= 16 px).
+ * Variants: positive on white and Mist, reversed on Ink and photography, mono for single colour
+ * print, and on-green for fleet stripes and hi-vis backing.
+ *
+ * Never stretch, rotate, outline, add effects, change the green, or set the wordmark in another
+ * typeface. Clear space is half the mark height on all sides.
+ */
+interface Props {
+  variant?: 'positive' | 'reversed' | 'mono' | 'on-green';
+  lockup?: 'primary' | 'stacked' | 'mark';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  showDescriptor?: boolean;
+  class?: string;
+  title?: string;
+}
+const {
+  variant = 'positive',
+  lockup = 'primary',
+  size = 'md',
+  showDescriptor = true,
+  class: cls = '',
+  title = 'Quantum Comms',
+} = Astro.props;
+
+const palette = {
+  positive: { mark: '#3F9C2F', word: '#15191C', desc: '#1E6B27' },
+  reversed: { mark: '#3F9C2F', word: '#FFFFFF', desc: '#3F9C2F' },
+  mono: { mark: 'currentColor', word: 'currentColor', desc: 'currentColor' },
+  'on-green': { mark: '#FFFFFF', word: '#FFFFFF', desc: '#FFFFFF' },
+}[variant];
+
+const isMark = lockup === 'mark';
+// Kit section 03: the descriptor sets at 12 px in the primary lockup. At the two small sizes it
+// would fall below that, so those render the wordmark-only variant instead of shrinking type.
+const withDescriptor = showDescriptor && (size === 'lg' || size === 'xl');
+---
+<span class:list={['ql', `ql--${lockup}`, `ql--${size}`, cls]}>
+  <svg
+    class="ql__mark"
+    viewBox="0 0 100 100"
+    role="img"
+    aria-label={isMark ? title : undefined}
+    aria-hidden={isMark ? undefined : 'true'}
+    focusable="false"
+  >
+    <circle cx="46" cy="50" r="32" fill="none" stroke={palette.mark} stroke-width="13" />
+    <path d="M66 70L90 94" stroke={palette.mark} stroke-width="13" stroke-linecap="butt" />
+    <path d="M61.7 6.8A46 46 0 0 1 89.2 34.3" fill="none" stroke={palette.mark} stroke-width="7" />
+  </svg>
+  {!isMark && (
+    <span class="ql__text">
+      <span class="ql__word" style={`color:${palette.word}`}>Quantum Comms</span>
+      {withDescriptor && <span class="ql__desc" style={`color:${palette.desc}`}>Rigging &middot; Civils &middot; EWP</span>}
+    </span>
+  )}
+</span>
+
+<style>
+  .ql { display: inline-flex; align-items: center; line-height: 1; text-decoration: none; min-width: 0; }
+  .ql__mark { flex: 0 0 auto; display: block; overflow: visible; }
+  .ql__text { display: flex; flex-direction: column; min-width: 0; }
+  /* Wordmark: Archivo 600 at width 110, sentence case, tight tracking. Kit section 05. */
+  .ql__word { font-family: var(--font-display); font-weight: 600; font-stretch: 110%; letter-spacing: -0.02em; white-space: nowrap; }
+  /* Descriptor: Archivo 500, wide tracking, uppercase, and it names all three service lines. */
+  .ql__desc { font-family: var(--font-display); font-weight: 500; font-stretch: 100%; letter-spacing: 0.24em; text-transform: uppercase; white-space: nowrap; }
+
+  .ql--primary { gap: 0.5em; }
+  .ql--primary .ql__text { gap: 0.28em; }
+  .ql--stacked { flex-direction: column; gap: 0.55em; text-align: center; }
+  .ql--stacked .ql__text { align-items: center; gap: 0.3em; }
+  .ql--stacked .ql__desc { letter-spacing: 0.22em; }
+
+  /* Sizes are set on the mark; the wordmark scales from it so the lockup stays in proportion. */
+  .ql--sm .ql__mark { width: 30px; height: 30px; }
+  .ql--sm .ql__word { font-size: 0.98rem; }
+  .ql--sm .ql__desc { font-size: 0.75rem; }
+
+  .ql--md .ql__mark { width: 38px; height: 38px; }
+  .ql--md .ql__word { font-size: 1.22rem; }
+  .ql--md .ql__desc { font-size: 0.75rem; }
+
+  .ql--lg .ql__mark { width: 56px; height: 56px; }
+  .ql--lg .ql__word { font-size: 1.8rem; }
+  .ql--lg .ql__desc { font-size: 0.75rem; }
+
+  .ql--xl .ql__mark { width: 90px; height: 90px; }
+  .ql--xl .ql__word { font-size: 2.5rem; }
+  .ql--xl .ql__desc { font-size: 0.8125rem; }
+
+  .ql--stacked.ql--sm .ql__word { font-size: 0.9rem; }
+  .ql--stacked.ql--md .ql__word { font-size: 1.1rem; }
+
+  /* Below the primary lockup's minimum width the descriptor is dropped rather than crushed. */
+  @media (max-width: 420px) {
+    .ql--primary.ql--md .ql__mark { width: 32px; height: 32px; }
+    .ql--primary.ql--md .ql__word { font-size: 1.05rem; }
+  }
+  /* The primary lockup has a minimum width of 140 px and must not be crushed below it.
+     On a narrow phone the large lockup steps down to the medium size and drops the descriptor,
+     which is the kit's wordmark-only variant, rather than shrinking the type. */
+  @media (max-width: 560px) {
+    .ql--primary.ql--lg .ql__desc { display: none; }
+    .ql--primary.ql--lg .ql__mark { width: 40px; height: 40px; }
+    .ql--primary.ql--lg .ql__word { font-size: 1.28rem; }
+  }
+  @media (max-width: 360px) {
+    .ql--primary.ql--lg .ql__mark { width: 34px; height: 34px; }
+    .ql--primary.ql--lg .ql__word { font-size: 1.1rem; }
+  }
+</style>

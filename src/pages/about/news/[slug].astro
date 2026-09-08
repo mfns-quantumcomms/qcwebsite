@@ -1,0 +1,165 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import { company } from '@data/company';
+
+export async function getStaticPaths() {
+  const news = await getCollection('news');
+  return news.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+interface Props { entry: CollectionEntry<'news'> }
+const { entry } = Astro.props as Props;
+const { Content } = await render(entry);
+const d = entry.data;
+const isoDate = d.date.toISOString().slice(0, 10);
+const longDate = d.date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const kindLabel = d.kind === 'press' ? 'Press coverage' : 'Company news';
+
+/** The rest of the register, newest first, so a reader can keep going. */
+const others = (await getCollection('news'))
+  .filter((n) => n.id !== entry.id)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+const shortDate = (date: Date) => date.toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/** Meta description must sit between 120 and 160 characters; summaries vary, so trim or extend, then trim again. */
+function clamp(s: string): string {
+  let out = s.trim();
+  if (out.length > 160) {
+    out = out.slice(0, 157);
+    out = out.slice(0, Math.max(out.lastIndexOf(' '), 100)).replace(/[,;:]$/, '') + '…';
+  }
+  return out;
+}
+let description = clamp(d.summary);
+if (description.length < 120) description = clamp(`${description} ${kindLabel}, ${longDate}.`);
+const pageUrl = `${company.siteUrl}/about/news/${entry.id}/`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': d.kind === 'press' ? 'NewsArticle' : 'Article',
+  headline: d.title,
+  description: d.summary,
+  datePublished: isoDate,
+  dateModified: isoDate,
+  inLanguage: 'en-AU',
+  mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+  url: pageUrl,
+  author: { '@id': `${company.siteUrl}/#organization` },
+  publisher: { '@id': `${company.siteUrl}/#organization` },
+  about: { '@id': `${company.siteUrl}/#organization` },
+  ...(d.source ? { sourceOrganization: { '@type': 'Organization', name: d.source } } : {}),
+  ...(d.url ? { isBasedOn: d.url, citation: d.url } : {}),
+};
+---
+<Base title={d.title} description={description} jsonLd={jsonLd}>
+  <Hero variant="page" eyebrow={kindLabel} title={d.title} lead={d.summary}>
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'About', href: '/about/' }, { label: 'News', href: '/about/news/' }, { label: d.title }]} />
+    <p class="dateline">
+      <time datetime={isoDate}>{longDate}</time>
+      {d.source && <span class="dateline__src"><span class="dateline__by">{d.kind === 'press' ? 'As reported by' : 'Source'}</span> <strong>{d.source}</strong></span>}
+    </p>
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container article">
+      <article class="entry reveal">
+        <div class="section-head__rule entry__rule"></div>
+        <div class="prose">
+          <Content />
+        </div>
+
+        {d.kind === 'press' && (
+          d.url ? (
+            <p class="entry__link">
+              <a class="btn btn--secondary" href={d.url} rel="noopener" target="_blank">Read the original article{d.source ? ` at ${d.source.split(',')[0].trim()}` : ''}<span class="visually-hidden"> (opens in a new tab)</span></a>
+            </p>
+          ) : (
+            <p class="notice">The link to the original article{d.source ? ` in ${d.source}` : ''} is being confirmed with the publisher before launch. Figures and quotes in third-party coverage are the publisher's own; the fleet register carries the status of any unit named.</p>
+          )
+        )}
+
+        {!d.verified && d.kind === 'company' && (
+          <p class="notice">This announcement is awaiting final confirmation from Quantum Comms before launch.</p>
+        )}
+      </article>
+      <aside class="article__rail reveal" aria-label="About this entry">
+        <div class="card">
+          <h3>About this entry</h3>
+          <ul>
+            <li><strong>Published</strong> {longDate}</li>
+            {d.source && <li><strong>{d.kind === 'press' ? 'Reported by' : 'Source'}</strong> {d.source}</li>}
+            <li><strong>Status</strong> {d.verified ? 'Confirmed' : 'Awaiting confirmation'}</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Fleet figures</h3>
+          <p class="text-steel">Any unit named in coverage is listed on the register with its working height, outreach and current status.</p>
+          <a class="arrow-link" href="/fleet/">Fleet register</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">More news</p>
+        <h2>{others.length > 0 ? 'Other entries' : 'Back to the news index'}</h2>
+      </div>
+      {others.length > 0 && (
+        <ol class="more reveal" aria-label="Other news entries, newest first">
+          {others.map((n) => (
+            <li class="more__item">
+              <a class="more__link" href={`/about/news/${n.id}/`}>
+                <span class="more__when">{shortDate(n.data.date)}</span>
+                <span class="more__title">{n.data.title}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p class="more__all"><a class="arrow-link" href="/about/news/">All news</a></p>
+    </div>
+  </section>
+
+  <CtaBand heading="Check the register, not the headline" text="Units reported in the press appear on the fleet register with an explicit status: in service, on order or to be confirmed. Specs are published once the unit is delivered." primary={{ label: 'Fleet register', href: '/fleet/' }} secondary={{ label: 'Capability statement', href: '/capability-statement/' }} />
+</Base>
+
+<style>
+  /* Dateline under the headline: date, then who reported it. Only the labels take the
+     uppercase treatment; a publication keeps the name it prints. */
+  .dateline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1.25rem; margin: 0.75rem 0 0; max-width: none; font-family: var(--font-display); font-size: var(--fs-caption); color: var(--steel); }
+  .dateline time, .dateline__by { font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+  .dateline strong { color: var(--ink); font-weight: 600; }
+  .dateline__src { min-width: 0; overflow-wrap: anywhere; }
+
+  .entry { max-width: var(--measure); overflow-wrap: anywhere; }
+  .entry__rule { margin-bottom: 1.75rem; }
+  /* A long publication name must wrap inside the button rather than widen the page. */
+  .entry__link .btn { max-width: 100%; text-align: center; }
+  .entry__link { margin-top: 1.75rem; }
+
+  .more { list-style: none; margin: 0 0 1.25rem; padding: 0; max-width: none; display: grid; gap: 0; }
+  .more__item { margin: 0; min-width: 0; }
+  .more__link { display: flex; align-items: center; gap: 1rem; padding: 1.15rem 0; border-top: 1px solid var(--concrete); text-decoration: none; color: inherit; min-width: 0; }
+  .more__item:first-child .more__link { border-top: 2px solid var(--ink); }
+  .more__item:last-child .more__link { border-bottom: 1px solid var(--concrete); }
+  .more__when { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--steel); flex: 0 0 auto; }
+  .more__title { font-family: var(--font-display); font-weight: 600; color: var(--ink); flex: 1 1 auto; min-width: 0; }
+  .more__link svg { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; color: var(--deep-green); transition: transform .25s ease; }
+  .more__link:hover .more__title { color: var(--deep-green); }
+  .more__link:hover svg { transform: translateX(4px); }
+  @media (max-width: 620px) {
+    .more__link { flex-wrap: wrap; gap: 0.25rem 1rem; }
+    .more__when { flex: 1 0 100%; }
+  }
+  .more__all { margin: 0; }
+</style>

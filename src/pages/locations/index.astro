@@ -1,0 +1,279 @@
+---
+/**
+ * Locations hub. The coverage map leads the page, then confirmed depots as media cards,
+ * then a full-bleed band on national mobilisation and how to book work away from a depot.
+ * Only confirmed depots (confirmedDepots()) get cards, pages and LocalBusiness data.
+ * The map reads the depot register itself, so an unconfirmed depot never gets a pin.
+ * Every figure in the stat band is counted from the registers; nothing is typed here.
+ */
+import type { CollectionEntry } from 'astro:content';
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CoverageMap from '@components/CoverageMap.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { Image } from 'astro:assets';
+import { photos, alts, type PhotoKey } from '@data/images';
+import { company, depotPolicy, headlineFacts } from '@data/company';
+import { confirmedDepots, coverageStates, depotHref } from '../../lib/facts';
+
+const stateNames: Record<string, string> = {
+  VIC: 'Victoria', NSW: 'New South Wales', QLD: 'Queensland', SA: 'South Australia',
+  WA: 'Western Australia', TAS: 'Tasmania', NT: 'Northern Territory', ACT: 'Australian Capital Territory',
+};
+const stateOrder = ['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
+const listJoin = (arr: string[]) => (arr.length <= 1 ? arr.join('') : `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`);
+
+const depots = await confirmedDepots();
+const coverageSet = new Set<string>(await coverageStates());
+const coverage = stateOrder.filter((s) => coverageSet.has(s));
+const depotStates = stateOrder.filter((s) => depots.some((d) => d.data.state === s));
+const depotStateNames = listJoin(depotStates.map((s) => stateNames[s] ?? s));
+const coverageNames = listJoin(coverage.map((s) => stateNames[s] ?? s));
+const hqState = company.hqAddress.state;
+const hqStateName = stateNames[hqState] ?? hqState;
+const yardWithHq = depots.some((d) => d.data.role === 'Workshop and fleet yard' && d.data.state === hqState);
+const otherDepotStates = depotStates.filter((s) => s !== hqState);
+const otherDepotStateNames = listJoin(otherDepotStates.map((s) => stateNames[s] ?? s));
+
+const description = `Quantum Comms depots in ${depotStateNames} with addresses, phone numbers and hours, service coverage by state, and how crews mobilise nationally.`;
+
+/* Counted from the depot register and the fact register. No figure is typed into the page. */
+const since = headlineFacts.tradingSince.verified ? headlineFacts.tradingSince.value : null;
+const stats: Array<{ n: string; text?: boolean; l: string }> = [
+  { n: String(depots.length), l: 'Confirmed depots, each with an address, contact and hours' },
+  { n: String(coverage.length), l: 'States serviced from a depot or by travelling crews' },
+  ...(since ? [{ n: since, l: `Trading since, formerly ${company.formerName}` }] : []),
+];
+
+/* One photograph per depot role, so the card set is consistent as depots are confirmed. */
+const photoByRole: Record<CollectionEntry<'depots'>['data']['role'], PhotoKey> = {
+  'Head office': 'truckUnitDepot',
+  'Workshop and fleet yard': 'fleetLineupSunset',
+  'Depot': 'ewpGreenSite',
+};
+
+/** LocalBusiness record for a confirmed depot. Opening hours only when the depot's hours match the company hours spec. */
+function depotLd(d: CollectionEntry<'depots'>): Record<string, unknown> {
+  const url = `${company.siteUrl}${depotHref(d)}`;
+  const hoursMatch = Boolean(d.data.hours && company.hours.startsWith(d.data.hours));
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    '@id': `${url}#depot`,
+    name: `${company.tradingName} ${d.data.name}`,
+    url,
+    parentOrganization: { '@id': `${company.siteUrl}/#organization` },
+    ...(d.data.phone ? { telephone: d.data.phone.tel } : {}),
+    ...(d.data.email ? { email: d.data.email } : {}),
+    address: {
+      '@type': 'PostalAddress',
+      ...(d.data.street ? { streetAddress: d.data.street } : {}),
+      addressLocality: d.data.suburb,
+      addressRegion: d.data.state,
+      ...(d.data.postcode ? { postalCode: d.data.postcode } : {}),
+      addressCountry: 'AU',
+    },
+    ...(d.data.geo ? { geo: { '@type': 'GeoCoordinates', latitude: d.data.geo.lat, longitude: d.data.geo.lng } } : {}),
+    ...(d.data.mapUrl ? { hasMap: d.data.mapUrl } : {}),
+    ...(hoursMatch ? { openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: company.hoursSpec.days, opens: company.hoursSpec.opens, closes: company.hoursSpec.closes }] } : {}),
+  };
+}
+const jsonLd = depots.map(depotLd);
+---
+<Base title="Locations" description={description} jsonLd={jsonLd}>
+  <Hero
+    variant="photo"
+    eyebrow="Locations"
+    title="Depots and coverage"
+    lead={`Depots in ${depotStateNames}, service coverage across ${coverageNames}, and crews that mobilise to metro and remote sites anywhere in Australia.`}
+    image={photos.fleetYard}
+    imageAlt={alts.fleetYard}
+  >
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Locations' }]} />
+  </Hero>
+
+  <section class="section section--tight section--mist">
+    <div class="container">
+      <ul class="statband reveal" aria-label="Depot network facts">
+        {stats.map((s) => (
+          <li>
+            <span class:list={["statband__n", { "statband__n--text": s.text }]}>{s.n}</span>
+            <span class="statband__l">{s.l}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Coverage</p>
+        <h2>Where we work</h2>
+        <p class="lead">Head office{yardWithHq ? ', the workshop and the main fleet yard are' : ' is'} in {hqStateName}.{otherDepotStates.length > 0 ? ` Units and crews also operate from ${otherDepotStates.length === 1 ? 'the depot' : 'depots'} in ${otherDepotStateNames}.` : ''} The states listed here are where we hold depots or regularly service work.</p>
+      </div>
+      <div class="mapsplit reveal">
+        <div class="covwrap">
+          <CoverageMap caption={`Depots in ${depotStateNames}. Shaded states are serviced from a depot.`} />
+        </div>
+        <div class="cov-side">
+          <ul class="states" aria-label="Service coverage by state">
+            {coverage.map((s) => (
+              <li>
+                <span class="states__name">{stateNames[s] ?? s}</span>
+                {depotStates.includes(s) ? <span class="chip chip--green">Depot</span> : <span class="chip">Coverage</span>}
+              </li>
+            ))}
+          </ul>
+          <p>States marked coverage are serviced by crews and units mobilised from a depot. A local depot is listed once it is confirmed and staffed.</p>
+          <p class="mb-0"><a class="arrow-link" href="/contact/">Contact a depot</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Depots</p>
+        <h2>Confirmed depots</h2>
+        <p class="lead">Each depot page lists the address, contact details, hours in local time, what the depot does and the units based there.</p>
+      </div>
+      <div class="grid grid--3 reveal">
+        {depots.map((d) => {
+          const key = photoByRole[d.data.role];
+          const addr = [d.data.street, `${d.data.suburb} ${d.data.state} ${d.data.postcode ?? ''}`.trim()].filter(Boolean);
+          return (
+            <article class="media-card depotcard">
+              <div class="media-card__media">
+                <Image src={photos[key]} alt={alts[key]} widths={[420, 800]} sizes="(min-width: 900px) 33vw, 100vw" />
+              </div>
+              <div class="media-card__body">
+                <span class="media-card__label">{d.data.state} · {d.data.role}</span>
+                <h3 class="media-card__title"><a href={depotHref(d)}>{d.data.name}</a></h3>
+                <address class="depotcard__addr">{addr.map((l) => <span>{l}<br /></span>)}</address>
+                <p class="depotcard__contact">
+                  {d.data.phone && <a href={`tel:${d.data.phone.tel}`}><span class="visually-hidden">Call </span>{d.data.phone.display}</a>}
+                  {d.data.email && <a href={`mailto:${d.data.email}`}>{d.data.email}</a>}
+                </p>
+                {d.data.hours && <p class="caption mb-0">{d.data.hours} ({d.data.timezone.replace('Australia/', '')} time)</p>}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      <p class="notice depots-note">Additional depots are listed here once confirmed. {depotPolicy.note}</p>
+    </div>
+  </section>
+
+  <section class="section section--dark feature">
+    <div class="feature__bg" aria-hidden="true">
+      <Image src={photos.ewpHilltop} alt="" widths={[900, 1400, 2000]} sizes="100vw" />
+    </div>
+    <div class="container feature__inner">
+      <div class="feature__text reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Mobilisation</p>
+        <h2>Crews mobilise nationally</h2>
+        <p class="lead">Rigging, civil and EWP crews work in metro and remote locations across Australia, and travel, accommodation and plant transport are quoted per job.</p>
+        <p class="feature__note">Most jobs outside {depotStateNames} are serviced by mobilising a unit and crew.</p>
+        <a class="arrow-link" href="/fleet/how-hire-works/">How hire works</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--wide reveal">
+        <div class="section-head__rule"></div>
+        <p class="eyebrow">Planning</p>
+        <h2>Booking work away from a depot</h2>
+        <p class="lead">Three things make a job away from a depot quick to price.</p>
+      </div>
+      <div class="grid grid--3 reveal">
+        <div class="card">
+          <h3>Tell us the site</h3>
+          <p>Send the site address or coordinates, the working height or scope, dates and any access limits. We confirm which depot and unit will service it.</p>
+        </div>
+        <div class="card">
+          <h3>Travel and access</h3>
+          <p>Truck-mounted units travel by road under the operator's heavy vehicle licence, so ground conditions and the jacking footprint are checked before we commit. Bog mats are available for soft ground.</p>
+        </div>
+        <div class="card">
+          <h3>Inductions and permits</h3>
+          <p>Crews hold current carrier inductions. Site-specific inductions, permits to work and electrical spotters are arranged as part of the scope.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Need a depot on the phone?"
+    text="Call head office during business hours and we will connect you with the depot nearest your site, or send an enquiry with the site location and dates."
+    primary={{ label: 'Contact a depot', href: '/contact/' }}
+    secondary={{ label: 'Capability statement', href: '/capability-statement/' }}
+  />
+</Base>
+
+<style>
+  /* Map beside the state list, with the map given the larger track: it is the lead graphic
+     on this page. Two columns only from 1080 px, because a narrower column shrinks the map
+     far enough to push its pin labels under 12 px. */
+  .mapsplit { display: grid; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+  @media (min-width: 1080px) { .mapsplit { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+  .mapsplit > * { min-width: 0; }
+  .cov-side { min-width: 0; }
+
+  /* The map draws its depot labels in its own coordinate space, so the figure keeps a
+     right gutter for the label that sits over the Queensland coast, and clips anything
+     past it. Below 480 px the map is too small to carry a 12 px label, so the pins and
+     the legend do the work and the depot names are read from the cards below. */
+  .covwrap { min-width: 0; overflow: hidden; padding-right: 14%; }
+  .covwrap :global(svg.covmap__svg .covmap__label) { font-size: 34px; }
+  @media (max-width: 479px) {
+    .covwrap { padding-right: 2%; }
+    .covwrap :global(svg.covmap__svg .covmap__label) { display: none; }
+  }
+
+  .states { list-style: none; padding: 0; margin: 0 0 1.25rem; display: grid; gap: 0.5rem; max-width: none; }
+  /* The tiles sit on a white section, so they take the quiet ground rather than white. */
+  .states li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; min-width: 0; padding: 0.6rem 0.9rem; background: var(--mist); border: 1px solid var(--line); border-radius: var(--radius); }
+  .states__name { font-family: var(--font-display); font-weight: 600; color: var(--ink); min-width: 0; }
+
+  /* Depot media card. The card itself is not a link, because it carries phone and email
+     links of its own; the depot name is the link to the depot page. */
+  .depotcard__addr { font-style: normal; overflow-wrap: anywhere; color: var(--graphite); }
+  .depotcard__contact { display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; margin: 0; overflow-wrap: anywhere; }
+  .depotcard__contact a { display: inline-flex; align-items: center; min-height: 44px; }
+  /* .media-card p sets the body colour, so the hours line is put back to caption grey. */
+  .depotcard .caption { color: var(--steel); }
+  .depotcard .media-card__title a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; }
+  .depotcard:hover .media-card__title a, .depotcard .media-card__title a:hover { color: var(--deep-green); }
+  .depots-note { margin-top: clamp(1.5rem, 3vw, 2.25rem); }
+
+  /* Feature band: a photograph darkened to carry reversed text, the sector's standard way of
+     breaking a long page without adding another card grid. */
+  .feature { position: relative; overflow: hidden; }
+  .feature__bg { position: absolute; inset: 0; }
+  .feature__bg :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+  .feature__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(92deg, rgba(21,25,28,.95) 0%, rgba(21,25,28,.88) 42%, rgba(21,25,28,.6) 100%); }
+  .feature__inner { position: relative; }
+  /* Below 1000 px the text runs the full width of the band, so the side scrim is replaced by
+     a dense bottom-to-top one, the same move the home hero makes on a phone. */
+  @media (max-width: 1000px) {
+    .feature__bg::after { background: linear-gradient(to top, rgba(21,25,28,.96) 15%, rgba(21,25,28,.9) 100%); }
+  }
+  .feature__text { max-width: 60ch; }
+  .feature__note { color: var(--on-ink-quiet); font-size: var(--fs-dense); }
+
+  /* On paper the band is a plain text block and every revealed block is already in place. */
+  @media print {
+    .feature__bg { display: none !important; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    .section-head { max-width: none; margin-bottom: 0.5rem; }
+    .section-head__rule { display: none !important; }
+  }
+</style>

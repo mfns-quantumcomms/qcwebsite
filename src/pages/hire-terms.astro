@@ -1,0 +1,171 @@
+---
+import Base from '@layouts/Base.astro';
+import Hero from '@components/Hero.astro';
+import Breadcrumbs from '@components/Breadcrumbs.astro';
+import CtaBand from '@components/CtaBand.astro';
+import { company, training, currentYear } from '@data/company';
+import { fleetAll } from '../lib/facts';
+
+const description = 'Standard conditions for EWP and plant hire from Quantum Comms: wet and dry hire, operator competency, inspections, insurance, site conditions and wind limits.';
+
+// Wind limit is read from the fleet register, never typed. Units without a published rating fall back to their own spec sheet.
+const units = await fleetAll();
+const ratedUnits = units.filter((u) => typeof u.data.maxWindMs === 'number');
+const windLimit = ratedUnits.length ? Math.min(...ratedUnits.map((u) => u.data.maxWindMs as number)) : null;
+const licenceClasses = Array.from(new Set(units.map((u) => u.data.licence).filter((l): l is string => Boolean(l)))).sort();
+
+const sections = [
+  { id: 'scope', title: 'What these conditions cover' },
+  { id: 'wet-dry', title: 'Wet hire and dry hire' },
+  { id: 'operators', title: 'Operator competency and inductions' },
+  { id: 'minimum', title: 'Minimum hire, standby and cancellation' },
+  { id: 'condition', title: 'Inspections, dilapidation reports and damage' },
+  { id: 'insurance', title: 'Insurance responsibilities' },
+  { id: 'site', title: 'Site conditions, access and ground bearing' },
+  { id: 'weather', title: 'Weather and wind limits' },
+  { id: 'use', title: 'Use of the equipment' },
+  { id: 'payment', title: 'Payment terms' },
+  { id: 'agreement', title: 'Your signed hire agreement prevails' },
+  { id: 'law', title: 'Governing law' },
+];
+---
+<Base title="Hire terms" description={description}>
+  <Hero variant="page" eyebrow="Legal" title="EWP and plant hire conditions" lead="A plain summary of our standard hire conditions so procurement and site teams know what to expect before a unit is booked. Your signed hire agreement prevails.">
+    <Breadcrumbs slot="breadcrumbs" items={[{ label: 'Hire terms' }]} />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="container legal">
+      <nav class="toc reveal" aria-labelledby="toc-h">
+        <div class="section-head__rule" aria-hidden="true"></div>
+        <h2 class="toc__h" id="toc-h">On this page</h2>
+        <ol>{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ol>
+      </nav>
+
+      <article class="prose legal__body">
+        <p class="notice" role="note"><strong>Draft for legal review.</strong> These conditions are a starting point prepared for {company.legalName} and have not yet been reviewed by a lawyer. Until they are, the signed hire agreement issued with each quote is the only binding document.</p>
+
+        <h2 id="scope">What these conditions cover</h2>
+        <p>These conditions apply to hire of truck-mounted and insulated elevating work platforms (EWPs), generators, earthmoving plant and test equipment from {company.legalName} (ABN {company.abn}). They summarise our standard position. They sit under your signed hire agreement, your quote, and any panel, subcontract or purchase order terms we have agreed in writing, which prevail if there is a conflict.</p>
+        <p>For how a hire is booked and delivered in practice, see <a href="/fleet/how-hire-works/">how hire works</a>. Unit specifications are on the <a href="/fleet/">fleet register</a>.</p>
+
+        <h2 id="wet-dry">Wet hire and dry hire</h2>
+        <h3>Wet hire</h3>
+        <p>The unit comes with our operator. We supply the truck, the operator, fuel and consumables, and we maintain the unit. Our operator is responsible for setting up and operating the EWP within its limits. You direct the work in the basket and remain responsible for the site, the task and your own people.</p>
+        <p>Our wet-hire operators hold, as a minimum:</p>
+        <ul>{training.operatorCredentials.map((c) => <li>{c}</li>)}</ul>
+        <h3>Dry hire</h3>
+        <p>You take the unit and supply your own operator. During the hire you are responsible for daily pre-start checks, logbook entries, refuelling, security of the unit and operating within the manufacturer's limits and the law. We remain responsible for scheduled servicing and periodic inspections, which we arrange with you so the unit is available for them.</p>
+
+        <h2 id="operators">Operator competency and inductions</h2>
+        <p>Before we release an EWP on dry hire, each of your operators must:</p>
+        <ul>
+          <li>hold the high risk work licence that applies to boom-type EWPs, and the driver licence class shown on the unit's fleet page{licenceClasses.length ? ` (units on the register call for ${licenceClasses.join(' or ')} class)` : ''}</li>
+          <li>complete our induction on that specific unit, including a familiarisation session run by us</li>
+          <li>show current working-at-heights training and, for tower or mast work, tower rescue training</li>
+          <li>hold the carrier, utility or site inductions the site requires</li>
+        </ul>
+        <p>If, after the induction, we consider an operator not competent on the unit, you must nominate another operator before the unit is released. A change of operator during the hire needs a new induction. This is not negotiable: it protects your people, our equipment and our accreditation with the carriers and utilities we work for.</p>
+
+        <h2 id="minimum">Minimum hire, standby and cancellation</h2>
+        <p><strong>Wet hire</strong> is charged by the hour with a minimum charge for each booking. A longer minimum applies on weekends and public holidays, and time beyond the standard day is charged at the overtime rate on your quote. A travel allowance applies where the operator stays away overnight, and a vehicle allowance where daily travel is long.</p>
+        <p><strong>Dry hire</strong> of an EWP is a monthly arrangement. A minimum initial term applies to each unit, after which the hire continues month by month until you give notice.</p>
+        <p><strong>Standby.</strong> Time the unit and operator spend on site waiting for access, permits, inductions, ground preparation or weather is charged at the hourly rate unless your agreement says otherwise.</p>
+        <p><strong>Cancellation.</strong> If you cancel a wet-hire booking inside the notice period on your quote, or the unit arrives on site and cannot work for reasons on your side, the minimum charge for the booking applies. Dry hire ended before the minimum term is charged to the end of that term.</p>
+        <p>The current minimum charges, minimum term, notice periods and allowances are stated on your quote and the rate sheet issued with it.</p>
+        <p class="notice">For the client: confirm the weekday, weekend and public holiday minimum hours, the dry-hire minimum term, the cancellation notice period and the standby rule before this page is approved. The last published rate sheet is dated and should not be reissued until it has been reviewed.</p>
+
+        <h2 id="condition">Inspections, dilapidation reports and damage</h2>
+        <p>Every unit leaves the yard with a current logbook, its last service record and a pre-hire dilapidation report with photographs. A post-hire report is completed when the unit returns. We prepare both reports at the fee on your quote, and you or your representative may attend either inspection.</p>
+        <p>You are responsible for damage to the unit during the hire beyond fair wear and tear, including tyres, glass, basket, controls, hoses and outrigger pads, and for cleaning if the unit returns heavily soiled. Damage caused by our operator during wet hire is our responsibility.</p>
+        <p>Tell us the same day if the unit is damaged, develops a fault or is involved in an incident. Do not repair, alter or have a third party work on the unit without our written consent. Where the law requires an incident to be notified to a regulator, you notify for your site and we notify for our plant.</p>
+
+        <h2 id="insurance">Insurance responsibilities</h2>
+        <h3>Wet hire</h3>
+        <p>We carry public liability insurance and insure our plant. Our operators are covered by our workers compensation. Certificates of currency are issued on request for a named project or panel through the <a href="/compliance/">compliance page</a>.</p>
+        <h3>Dry hire</h3>
+        <p>You must insure the unit for its full replacement value against loss, theft and damage for the whole hire, and hold public liability insurance that covers its use on your site. We may ask for certificates before the unit is released. You are liable for loss or theft of the unit during the hire, and your own operators are covered by your workers compensation, not ours.</p>
+        <p>Nothing here limits our insurer's rights of recovery where loss is caused by your breach of these conditions.</p>
+        <p class="notice">For the client: insert the public liability limit, the plant insurance arrangement, and whether a damage waiver option is offered on dry hire.</p>
+
+        <h2 id="site">Site conditions, access and ground bearing</h2>
+        <p>Before the unit arrives you must provide:</p>
+        <ul>
+          <li>a safe access route for a heavy vehicle. Transport length, width, height and gross vehicle weight are on each unit's fleet page</li>
+          <li>firm, level ground with enough bearing capacity for the outrigger loads, and confirmation of the jacking footprint the site can accept: normal, narrow or one-sided</li>
+          <li>underground services information, including a <a href="https://www.byda.com.au/" rel="noopener" target="_blank">Before You Dig Australia<span class="visually-hidden"> (opens in a new tab)</span></a> enquiry, wherever outriggers or plant will load the ground</li>
+          <li>overhead powerline clearances, and any electrical spotter, permit or de-energisation the site requires</li>
+          <li>traffic management and permits where the unit sets up on or near a road</li>
+          <li>site inductions, the carrier's access arrangements and any keys or codes</li>
+        </ul>
+        <p>Bog mats and outrigger pads are available on request. Our operator may refuse to set up, or may stow the unit, if the ground, access or clearances are not safe. Standby applies until they are. On dry hire these checks are your responsibility.</p>
+
+        <h2 id="weather">Weather and wind limits</h2>
+        {windLimit !== null ? (
+          <p>Every EWP has a manufacturer's maximum wind speed for operation. On our register the rated limit is {windLimit} m/s for the units that publish one; each unit's fleet page shows its own figure, and the manufacturer's manual prevails.</p>
+        ) : (
+          <p>Every EWP has a manufacturer's maximum wind speed for operation. Each unit's fleet page shows its rated figure, and the manufacturer's manual prevails.</p>
+        )}
+        <p>Wind is measured at the basket with the operator's anemometer, and gusts count. The operator, or our supervisor, decides whether the unit works, stops or stows, and that decision is final. Lightning, heavy rain, hail and poor visibility also stop work at height.</p>
+        <p>Weather stand-down is charged as standby unless your agreement says otherwise. On dry hire you are responsible for observing the limits and recording wind readings.</p>
+
+        <h2 id="use">Use of the equipment</h2>
+        <p>During the hire you must:</p>
+        <ul>
+          <li>use the unit only for its rated purpose, within its safe working load, outreach chart and the manufacturer's manual</li>
+          <li>not exceed the basket capacity, side-load the boom, or use the unit as a crane except with lifting arms or winches we have fitted and rated</li>
+          <li>not weld, cut or use the basket for hot work without our written consent</li>
+          <li>not modify the unit, remove guards or bypass controls or interlocks</li>
+          <li>not sub-hire, lend or part with possession of the unit</li>
+          <li>not move the unit outside the agreed region or interstate without telling us first</li>
+          <li>keep the unit secured when not in use and comply with work health and safety law on the site</li>
+        </ul>
+
+        <h2 id="payment">Payment terms</h2>
+        <p>Prices exclude GST unless stated. Hire is invoiced at the frequency on your quote and is payable on the terms of your approved trade account. Customers without an approved account pay before the unit is released. We may suspend hire and recover the unit if an account is overdue.</p>
+        <p class="notice">Payment terms placeholder for the client: state the invoice frequency, payment days for account customers, any deposit for new customers, card surcharges, and the process for account applications.</p>
+
+        <h2 id="agreement">Your signed hire agreement prevails</h2>
+        <p>These conditions summarise our standard position and are published for information. The binding documents are the hire agreement or panel agreement you sign, the quote, and the site-specific documents such as SWMS, lift plans and rescue plans. If anything on this page conflicts with them, they prevail.</p>
+        <p>We do not accept terms printed on a hirer's purchase order unless we have agreed to them in writing.</p>
+
+        <h2 id="law">Governing law</h2>
+        <p>These conditions are governed by the laws of Victoria, Australia. You and we submit to the non-exclusive jurisdiction of the courts of Victoria and the courts that hear appeals from them.</p>
+
+        <p class="caption updated">Last updated: {currentYear} draft. The date will be set when the reviewed version is approved.</p>
+      </article>
+    </div>
+  </section>
+
+  <CtaBand
+    heading="Ready to book a unit, or need the rate sheet?"
+    text="How hire works sets out booking, delivery, inductions and inspections step by step. For rates, minimum terms and availability, contact the depot nearest your site."
+    primary={{ label: 'How hire works', href: '/fleet/how-hire-works/' }}
+    secondary={{ label: 'Contact a depot', href: '/contact/' }}
+  />
+</Base>
+
+<style>
+  /* A legal document, set like one: a numbered contents column that stays with the reader,
+     and clauses separated by a rule rather than by white space alone. */
+  .legal { display: grid; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+  .legal > * { min-width: 0; }
+  @media (min-width: 900px) { .legal { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); } .toc { position: sticky; top: 1.5rem; } }
+
+  .toc .section-head__rule { margin-bottom: 1.25rem; }
+  .toc__h { font-family: var(--font-display); font-size: var(--fs-eyebrow); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); margin: 0 0 0.5rem; }
+  .toc ol { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: clause; }
+  .toc li { margin: 0; counter-increment: clause; }
+  .toc a { display: flex; align-items: center; gap: 0.85rem; min-height: 44px; padding: 0.55rem 0; border-top: 1px solid var(--concrete); font-family: var(--font-display); font-size: var(--fs-dense); line-height: 1.3; color: var(--ink); text-decoration: none; }
+  .toc a::before { content: counter(clause, decimal-leading-zero); flex: 0 0 auto; font-size: var(--fs-eyebrow); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; color: var(--steel); }
+  .toc li:last-child a { border-bottom: 1px solid var(--concrete); }
+  .toc a:hover, .toc a:hover::before { color: var(--deep-green); }
+
+  /* Legal prose carries long URLs and email addresses; they wrap rather than overflow. */
+  .legal__body { overflow-wrap: anywhere; }
+  .legal__body h2 { scroll-margin-top: 1.5rem; font-size: var(--fs-h3); margin-top: clamp(2.5rem, 5vw, 3.75rem); padding-top: clamp(1.25rem, 2.5vw, 1.75rem); border-top: 1px solid var(--concrete); }
+  .legal__body h3 { margin-top: 1.9em; color: var(--ink); }
+  .legal__body > :first-child { margin-top: 0; }
+  .legal__body ul { margin-top: 1em; }
+  .updated { margin-top: clamp(2.5rem, 5vw, 3.5rem); padding-top: 1rem; border-top: 1px solid var(--concrete); }
+</style>
