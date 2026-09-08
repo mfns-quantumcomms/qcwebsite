@@ -42,9 +42,44 @@ Search the code for `verified: false` and `confirmed: false`, and read the notic
 7. Legal review of `/privacy/`, `/terms/`, `/hire-terms/`, `/accessibility/`.
 8. Press links for the two news items.
 
+## Show it to management (GitHub Pages)
+
+A read-only preview, free, no account setup beyond this repository.
+
+1. On GitHub, open **Settings**, then **Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**. Save.
+3. Open the **Actions** tab, choose **Deploy to GitHub Pages**, and press **Run workflow** on `main`.
+   It also runs automatically on every push to `main`.
+4. After about two minutes the URL appears in the Actions run and under Settings, Pages:
+   `https://mfns-quantumcomms.github.io/qcwebsite/`
+
+If the repository is private, GitHub Pages needs a paid plan. Make the repository public for the
+trial, or use the Cloudflare option below.
+
+What differs from production on this preview:
+
+| | GitHub Pages | Cloudflare Pages |
+|---|---|---|
+| Pages, styling, images, maps | Yes | Yes |
+| Enquiry form actually sends | No, the form posts to a function that does not exist there | Yes |
+| Security headers from `public/_headers` | Not applied | Applied |
+| Legacy URL redirects from `public/_redirects` | Not applied | Applied |
+| URL | `/qcwebsite/` sub-path | Root |
+
+The sub-path is handled by `scripts/rebase-links.mjs`, which rewrites the built links after the
+build. Nothing in the source needs a base path.
+
 ## Deploy (Cloudflare Pages)
 
-- Build command `npm run build`, output directory `dist`, Node 20 or later.
+This is the real target: it serves at the root, runs the enquiry function, and applies the
+headers and redirects. Free tier is enough for a trial and gives a shareable
+`*.pages.dev` URL.
+
+1. Cloudflare dashboard, **Workers & Pages**, **Create**, **Pages**, **Connect to Git**.
+2. Pick this repository and the `main` branch.
+3. Build command `npm run build`, output directory `dist`, Node 20 or later.
+4. Add the environment variables below, then deploy.
+
 - `functions/api/enquiry.ts` is picked up automatically as `POST /api/enquiry`.
 - Environment variables: `RESEND_API_KEY`, `ENQUIRY_FROM` (a sender on a DKIM-verified domain), `ENQUIRY_TO_DEFAULT`, optional `ENQUIRY_TO_HIRE`, `ENQUIRY_TO_HSEQ`, `ENQUIRY_TO_TENDERS`, `ENQUIRY_TO_CAREERS`, `ENQUIRY_WEBHOOK_URL` (CRM or Teams), `TURNSTILE_SECRET`, and build-time `PUBLIC_TURNSTILE_SITE_KEY`.
 - Point `www.quantumcomms.com.au` at the Pages project, redirect the apex to `www`, enable HSTS at the zone, and re-register `quantumtraveltowers.com.au` if recoverable and redirect it.
