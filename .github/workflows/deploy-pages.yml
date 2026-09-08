@@ -40,6 +40,10 @@ jobs:
       - name: Resolve the Pages base path
         id: pages
         uses: actions/configure-pages@v5
+        with:
+          # Turns Pages on if it is not already, so a fresh clone of this repository
+          # deploys without anyone visiting the settings screen first.
+          enablement: true
 
       - name: Build
         run: npm run build
